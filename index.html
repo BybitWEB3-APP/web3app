@@ -262,7 +262,8 @@ window.coinErr=function(el){ try{ let fb=JSON.parse(el.dataset.fb||'[]'); if(fb.
 const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 const rstr=(ch,n)=>{ let s=''; for(let i=0;i<n;i++) s+=ch[Math.floor(Math.random()*ch.length)]; return s; };
-const genAddrSet=()=>({ TON:'UQ'+rstr(B64,46), BTC:'bc1q'+rstr('023456789acdefghjklmnpqrstuvwxyz',38), ETH:'0x'+rstr('0123456789abcdef',40) });
+const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const genAddrSet=()=>({ TON:'UQ'+rstr(B64,46), BTC:'bc1q'+rstr('023456789acdefghjklmnpqrstuvwxyz',38), ETH:'0x'+rstr('0123456789abcdef',40), BNB:'0x'+rstr('0123456789abcdef',40), APT:'0x'+rstr('0123456789abcdef',64), TRON:'T'+rstr(B58,33) });
 const WORDS='apple orbit cable delta ember frost grove hazel input jolly kiosk lunar maple noble ocean pearl quartz raven solar tiger umbra vivid wafer xenon yield zebra amber brisk cedar drift eagle flint glide hollow ivory jewel karma lemon mango nectar opal prism quill ripple'.split(' ');
 const genPhrase=()=>Array.from({length:12},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join(' ');
 /* У каждого пользователя — свой, уникально сгенерированный кошелёк (не общий демо-адрес) */
@@ -280,10 +281,20 @@ const DB={
   }); },
   save(obj){ const s=JSON.stringify(obj); try{ localStorage.setItem('vaultpro2', s) }catch(e){} if(this.cloud){ try{ tg.CloudStorage.setItem('vp_state', s, ()=>{}) }catch(e){} } }
 };
-function trimState(){ return { hidden:S.hidden, active:S.active, wallets:S.wallets.map(w=>({id:w.id,name:w.name,watch:w.watch,connected:w.connected,addr:w.addr,bal:w.bal,history:(w.history||[]).slice(0,15)})) }; }
+function trimState(){ return { hidden:S.hidden, active:S.active, wallets:S.wallets.map(w=>({id:w.id,name:w.name,watch:w.watch,connected:w.connected,addr:w.addr,bal:w.bal,usdt:w.usdt,history:(w.history||[]).slice(0,15)})) }; }
 function save(){ if(S) DB.save(trimState()); }
 const W=()=>S.wallets.find(w=>w.id===S.active)||S.wallets[0];
-const bal=s=>(W().bal[s]||0);
+
+/* USDT в разных сетях: отдельный баланс и комиссия по каждой */
+const USDT_NETS=[
+  {k:'TON',  label:'TON',   full:'TON (Jetton)', fee:0.05, color:'#0098EA'},
+  {k:'TRON', label:'TRON',  full:'TRC-20',       fee:1,    color:'#EF0027'},
+  {k:'BNB',  label:'BNB',   full:'BEP-20 (BSC)', fee:0.3,  color:'#F3BA2F'},
+  {k:'APT',  label:'Aptos', full:'Aptos',        fee:0.02, color:'#4AC8B0'},
+];
+const bal=s=>{ const w=W(); if(s==='USDT'){ if(w.usdt) return Object.values(w.usdt).reduce((x,y)=>x+(y||0),0); return w.bal.USDT||0; } return (w.bal[s]||0); };
+function usdtMap(){ const w=W(); if(!w.usdt){ w.usdt={TON:0,TRON:0,BNB:0,APT:0}; if(w.bal&&w.bal.USDT){ w.usdt.TON=w.bal.USDT; delete w.bal.USDT; } } return w.usdt; }
+function credit(sym,delta){ if(sym==='USDT'){ const m=usdtMap(); m.TON=+((m.TON||0)+delta).toFixed(6); } else { W().bal[sym]=+((W().bal[sym]||0)+delta).toFixed(8); } }
 
 /* ---------- Real on-chain balance (read-only, public API) ---------- */
 async function fetchTonBalances(address){
@@ -314,37 +325,72 @@ async function fetchTronBalances(address){
   }catch(e){}
   return out;
 }
+async function fetchTonHistory(address){
+  try{
+    const r=await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(address)}/events?limit=20`);
+    const j=await r.json();
+    const al=String(address).toLowerCase();
+    const out=[];
+    for(const ev of ((j&&j.events)||[])){
+      for(const ac of (ev.actions||[])){
+        const tt=ac.TonTransfer; if(!tt) continue;
+        const rec=((tt.recipient&&tt.recipient.address)||'').toLowerCase();
+        const isIn=rec===al;
+        const other=isIn?((tt.sender&&tt.sender.address)||''):((tt.recipient&&tt.recipient.address)||'');
+        out.push({type:isIn?'in':'out', sym:'TON', amt:Number(tt.amount)/1e9, who:other?other.slice(0,4)+'…'+other.slice(-4):'—', t:(ev.timestamp||0)*1000});
+      }
+    }
+    return out.length?out:null;
+  }catch(e){ return null; }
+}
 async function refreshWallet(w){
   if(!w || !w.addr) return;
-  let live={};
-  if(w.addr.TON) live=await fetchTonBalances(w.addr.TON);
-  else if(w.addr.TRON) live=await fetchTronBalances(w.addr.TRON);
+  let live=null, src=null;
+  if(w.addr.TON){ live=await fetchTonBalances(w.addr.TON); src='TON'; }
+  else if(w.addr.TRON){ live=await fetchTronBalances(w.addr.TRON); src='TRON'; }
   else return;
-  if(Object.keys(live).length){ w.bal=Object.assign({},w.bal,live); w.live=true; save(); render(); }
-  else if(w.watch) toast('Не удалось получить баланс');
+  if(live && Object.keys(live).length){
+    if(live.TON!=null) w.bal.TON=live.TON;
+    if(live.TRX!=null) w.bal.TRX=live.TRX;
+    if(live.USDT!=null){ if(!w.usdt) w.usdt={TON:0,TRON:0,BNB:0,APT:0}; w.usdt[src]=live.USDT; }
+    w.live=true; save(); render();
+  } else if(w.watch) toast('Не удалось получить баланс');
+  if(w.connected && w.addr.TON){ const h=await fetchTonHistory(w.addr.TON); if(h){ w.history=h; save(); render(); } }
 }
 
-/* ---------- TON Connect (connect own wallet, no secret phrase) ---------- */
+/* ---------- TON Connect (connect own wallet / sign real transfers, no secret phrase) ---------- */
 let tcui=null;
 // ВАЖНО: замените на адрес вашего размещённого манифеста
 const TONCONNECT_MANIFEST='https://YOUR-DOMAIN/tonconnect-manifest.json';
+function tonConnectInit(){
+  if(tcui || !window.TON_CONNECT_UI) return tcui;
+  try{
+    tcui=new TON_CONNECT_UI.TonConnectUI({manifestUrl:TONCONNECT_MANIFEST});
+    tcui.onStatusChange(wc=>{
+      if(wc && wc.account && wc.account.address){
+        const addr=wc.account.address;
+        let ex=S.wallets.find(x=>x.addr&&x.addr.TON===addr);
+        if(!ex){ ex={id:newId(),name:'Подключённый',watch:false,connected:true,addr:{TON:addr},bal:{},history:[]}; S.wallets.push(ex); }
+        else { ex.connected=true; ex.watch=false; }
+        S.active=ex.id; save(); render(); refreshWallet(ex);
+        closeSheet(); notify(); toast('Кошелёк подключён');
+      }
+    });
+  }catch(e){}
+  return tcui;
+}
 function tonConnect(){
   if(!window.TON_CONNECT_UI){ toast('TON Connect недоступен'); return; }
+  tonConnectInit();
+  try{ tcui.openModal(); }catch(e){ toast('Ошибка TON Connect'); }
+}
+async function realSendTon(to, tonAmount){
   try{
-    if(!tcui){
-      tcui=new TON_CONNECT_UI.TonConnectUI({manifestUrl:TONCONNECT_MANIFEST});
-      tcui.onStatusChange(wc=>{
-        if(wc && wc.account && wc.account.address){
-          const addr=wc.account.address;
-          let ex=S.wallets.find(x=>x.addr&&x.addr.TON===addr);
-          if(!ex){ ex={id:newId(),name:'Подключённый',watch:true,connected:true,addr:{TON:addr},bal:{},history:[]}; S.wallets.push(ex); }
-          S.active=ex.id; save(); render(); refreshWallet(ex);
-          closeSheet(); notify(); toast('Кошелёк подключён');
-        }
-      });
-    }
-    tcui.openModal();
-  }catch(e){ toast('Ошибка TON Connect'); }
+    if(!tcui) tonConnectInit();
+    if(!tcui) { toast('Кошелёк не подключён'); return false; }
+    await tcui.sendTransaction({ validUntil: Math.floor(Date.now()/1000)+360, messages:[{ address: to, amount: String(Math.round(tonAmount*1e9)) }] });
+    return true;
+  }catch(e){ return false; }
 }
 
 /* ---------- Format ---------- */
@@ -403,7 +449,7 @@ function render(){
       const a=A(h.sym);
       const ic=h.type==='in'?'<path d="M17 7L7 17M16 17H7V8"/>':h.type==='out'?'<path d="M7 17L17 7M8 7h9v9"/>':'<path d="M4 8h14l-4-4M20 16H6l4 4"/>';
       const title=h.type==='in'?'Получено':h.type==='out'?'Отправлено':'Обмен';
-      const sub=h.type==='swap'?`${h.sym} → ${h.to}`:(h.type==='in'?'от ':'на ')+esc(h.who);
+      const sub=h.type==='swap'?`${h.sym} → ${h.to}`:((h.type==='in'?'от ':'на ')+esc(h.who)+(h.net?' · '+esc(h.net):''));
       const val=h.type==='in'?`<b class="up num">+${amt(h.amt,a)}</b>`:h.type==='out'?`<b class="num">−${amt(h.amt,a)}</b>`:`<b class="up num">+${amt(h.toAmt,A(h.to))}</b>`;
       const sub2=h.type==='swap'?`−${amt(h.amt,a)}`:ago(h.t);
       return `<div class="row"><span class="tx-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">${ic}</svg></span>
@@ -488,7 +534,7 @@ const CPIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 function showSheet(){ sheet.classList.add('on'); scrim.classList.add('on'); try{ tg && tg.BackButton.show() }catch(e){} }
 function openSheet(kind, opts={}){
   openKind=kind; ctx={...opts}; haptic();
-  if((kind==='send'||kind==='swap') && W().watch){ openKind='notice'; watchNotice(); }
+  if((kind==='send'||kind==='swap') && W().watch && !W().connected){ openKind='notice'; watchNotice(); }
   else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView})[kind]();
   showSheet();
 }
@@ -504,15 +550,27 @@ function watchNotice(){
     <button class="primary" data-close>Понятно</button>`;
 }
 
+const uNetChips=sel=>`<div class="chips">${USDT_NETS.map(n=>`<button class="chip" data-unet="${n.k}" aria-pressed="${n.k===sel}"><span class="coin" style="background:${n.color};width:22px;height:22px;font-size:9px"><i>${n.label[0]}</i></span>${n.label}</button>`).join('')}</div>`;
 function sendView(){
   const a=A(ctx.sym||'TON'); ctx.sym=a.sym;
-  body.innerHTML=head('Отправить')+chips(a.sym)+`
-    <div class="field"><label for="to">Адрес получателя</label><input id="to" placeholder="UQ… или @username" autocomplete="off" value="${esc(ctx.to||'')}"></div>
-    <div class="field"><label for="am">Сумма · доступно ${amt(bal(a.sym),a)}</label>
+  const conn=!!W().connected;
+  if(conn && a.sym!=='TON'){
+    body.innerHTML=head('Отправить')+chips(a.sym)+`<div class="notice"><div class="ic">${CPIC}</div><p>Для подключённого кошелька реальный перевод сейчас доступен в TON. Жетоны и другие сети — через приложение вашего кошелька.</p></div><button class="ghost" data-close>Понятно</button>`;
+    body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.unet=null; haptic('soft'); sendView(); });
+    return;
+  }
+  const isU=a.sym==='USDT';
+  if(isU && !ctx.unet) ctx.unet='TON';
+  const un=isU?USDT_NETS.find(n=>n.k===ctx.unet):null;
+  const fee=isU?un.fee:a.fee;
+  const avail=isU?(usdtMap()[ctx.unet]||0):bal(a.sym);
+  body.innerHTML=head('Отправить')+chips(a.sym)+(isU?uNetChips(ctx.unet):'')+(conn?`<p class="demo" style="text-align:left;margin:0 2px 10px">Перевод подпишется в вашем кошельке через TON Connect.</p>`:'')+`
+    <div class="field"><label for="to">Адрес получателя${isU?' · '+un.full:''}</label><input id="to" placeholder="${isU?'Адрес в сети '+esc(un.label):'UQ… или @username'}" autocomplete="off" value="${esc(ctx.to||'')}"></div>
+    <div class="field"><label for="am">Сумма · доступно ${amt(avail,a)}</label>
       <div class="line"><input id="am" class="big num" inputmode="decimal" placeholder="0" value="${ctx.am||''}"><button class="pill" id="max">Макс.</button></div></div>
     <div class="kv"><span>≈ в долларах</span><b id="usdv" class="num">$0,00</b></div>
-    <div class="kv"><span>Сеть</span><b>${a.net}</b></div>
-    <div class="kv"><span>Комиссия сети</span><b class="num">${amt(a.fee,a)}</b></div>
+    <div class="kv"><span>Сеть</span><b>${isU?un.full:a.net}</b></div>
+    <div class="kv"><span>Комиссия сети</span><b class="num">${amt(fee,a)}</b></div>
     <div class="err" id="err"></div>
     <button class="primary" id="go" disabled>Отправить</button>`;
   const to=body.querySelector('#to'), am=body.querySelector('#am'), gob=body.querySelector('#go'), err=body.querySelector('#err');
@@ -521,40 +579,57 @@ function sendView(){
     const v=parseFloat(am.value.replace(',','.'))||0;
     body.querySelector('#usdv').textContent=usd(v*a.price,2);
     let e='';
-    if(v>0&&v+a.fee>bal(a.sym)) e='Недостаточно средств с учётом комиссии';
+    if(v>0&&v+fee>avail) e='Недостаточно средств с учётом комиссии';
     else if(to.value&&to.value.trim().length<5) e='Проверьте адрес получателя';
     err.textContent=e; gob.disabled=!!e||!v||!to.value.trim();
   };
   to.oninput=check; am.oninput=check;
-  body.querySelector('#max').onclick=()=>{ am.value=String(Math.max(0,+(bal(a.sym)-a.fee).toFixed(a.dp||2))); check(); };
-  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.am=''; haptic('soft'); sendView(); });
+  body.querySelector('#max').onclick=()=>{ am.value=String(Math.max(0,+(avail-fee).toFixed(a.dp||2))); check(); };
+  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.am=''; ctx.unet=null; haptic('soft'); sendView(); });
+  body.querySelectorAll('[data-unet]').forEach(b=>b.onclick=()=>{ ctx.unet=b.dataset.unet; ctx.am=''; haptic('soft'); sendView(); });
   gob.onclick=()=>{
     const v=parseFloat(am.value.replace(',','.'));
-    W().bal[a.sym]=+(bal(a.sym)-v-a.fee).toFixed(8);
     const raw=to.value.trim(), who=raw.length>12?raw.slice(0,4)+'…'+raw.slice(-4):raw;
-    W().history.unshift({type:'out',sym:a.sym,amt:v,who,t:Date.now()}); save(); render(); notify();
-    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">−${amt(v,a)}</h3><p>Отправлено на ${esc(who)}</p><button class="ghost" data-close>Готово</button></div>`;
+    if(conn){
+      gob.disabled=true; gob.textContent='Подтвердите в кошельке…';
+      realSendTon(raw, v).then(ok=>{
+        if(ok){ notify(); W().history.unshift({type:'out',sym:'TON',amt:v,who,t:Date.now()}); save(); render(); setTimeout(()=>refreshWallet(W()),6000);
+          body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">−${amt(v,a)}</h3><p>Отправлено на ${esc(who)}</p><button class="ghost" data-close>Готово</button></div>`;
+        } else { gob.disabled=false; gob.textContent='Отправить'; toast('Перевод не выполнен'); }
+      });
+      return;
+    }
+    if(isU){ const m=usdtMap(); m[ctx.unet]=+(((m[ctx.unet]||0)-v-fee)).toFixed(6); }
+    else { W().bal[a.sym]=+(bal(a.sym)-v-a.fee).toFixed(8); }
+    W().history.unshift({type:'out',sym:a.sym,amt:v,who,net:isU?un.label:undefined,t:Date.now()}); save(); render(); notify();
+    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">−${amt(v,a)}</h3><p>Отправлено на ${esc(who)}${isU?' · '+esc(un.label):''}</p><button class="ghost" data-close>Готово</button></div>`;
   };
   check();
 }
 
-const NETNAME={TON:'TON',BTC:'Bitcoin',ETH:'Ethereum',TRON:'TRON'};
+const NETNAME={TON:'TON',BTC:'Bitcoin',ETH:'Ethereum',TRON:'TRON',BNB:'BNB Smart Chain',APT:'Aptos'};
 function receiveView(){
   const s=ctx.sym||'TON'; ctx.sym=s;
-  const a=A(s), key=a.net, address=W().addr[key];
-  const netLabel=key==='TON'?(s==='TON'?'TON':'TON (Jetton)'):NETNAME[key];
+  const a=A(s), isU=s==='USDT';
+  if(isU && !ctx.unet) ctx.unet='TON';
+  const un=isU?USDT_NETS.find(n=>n.k===ctx.unet):null;
+  const key=isU?ctx.unet:a.net;
+  const address=W().addr[key];
+  const netLabel=isU?un.full:(key==='TON'?(s==='TON'?'TON':'TON (Jetton)'):NETNAME[key]);
+  const netPlain=isU?un.label:NETNAME[key];
   let main;
   if(address){
     main=`<div class="qr" id="qr"></div>
       <div class="kv"><span>Сеть</span><b>${netLabel}</b></div>
       <div class="addr">${address}</div>
       <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="sh">Поделиться</button></div>
-      <p class="demo">Отправляйте на этот адрес только ${s} в сети ${NETNAME[key]}.</p>`;
+      <p class="demo">Отправляйте на этот адрес только ${s} в сети ${netPlain}.</p>`;
   } else {
-    main=`<div class="notice"><div class="ic">${CPIC}</div><p>Для сети ${NETNAME[key]} у этого кошелька нет адреса. Выберите токен другой сети или создайте полноценный кошелёк.</p></div>`;
+    main=`<div class="notice"><div class="ic">${CPIC}</div><p>Для сети ${netPlain} у этого кошелька нет адреса. Выберите другую сеть или создайте кошелёк.</p></div>`;
   }
-  body.innerHTML=head('Получить')+chips(s)+main;
-  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; haptic('soft'); receiveView(); });
+  body.innerHTML=head('Получить')+chips(s)+(isU?uNetChips(ctx.unet):'')+main;
+  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.unet=null; haptic('soft'); receiveView(); });
+  body.querySelectorAll('[data-unet]').forEach(b=>b.onclick=()=>{ ctx.unet=b.dataset.unet; haptic('soft'); receiveView(); });
   if(address){
     try{ new QRCode(body.querySelector('#qr'),{text:address,width:376,height:376,colorDark:'#000000',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ const q=body.querySelector('#qr'); if(q) q.style.display='none'; }
     body.querySelector('#cp').onclick=()=>copy(address);
@@ -594,7 +669,7 @@ function swapView(){
   });
   gob.onclick=()=>{
     const v=parseFloat(fa.value.replace(',','.'));
-    W().bal[f.sym]=+(bal(f.sym)-v).toFixed(8); W().bal[t.sym]=+(bal(t.sym)+ctx.out).toFixed(8);
+    credit(f.sym,-v); credit(t.sym,+ctx.out);
     W().history.unshift({type:'swap',sym:f.sym,amt:v,to:t.sym,toAmt:+ctx.out.toFixed(8),t:Date.now()}); save(); render(); notify();
     ctx.fa='';
     body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">+${amt(ctx.out,t)}</h3><p>Обменяно ${amt(v,f)}</p><button class="ghost" data-close>Готово</button></div>`;
@@ -772,6 +847,7 @@ async function init(){
   if(!S || !Array.isArray(S.wallets) || !S.wallets.length){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; save(); }
   if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
   render();
+  tonConnectInit();
   fetchPrices(); startWs();
   setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
   setInterval(()=>{ const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w); }, 30000);
