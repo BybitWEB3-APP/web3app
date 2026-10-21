@@ -11,17 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0F1320; --bg2:#181D2E; --bg3:#22283D; --text:#EEF1F8; --hint:#8089A3; --line:#262C42;
-  --accent:#8F7BFF; --accent-2:#B6A9FF; --accent-text:#0F1320; --up:#2BD39A; --down:#FF5C7A;
-  --up-bg:rgba(43,211,154,.14); --down-bg:rgba(255,92,122,.14);
-  --sheet:#161B2B; --scrim:rgba(4,6,14,.7);
+  --bg:#000000; --bg2:#121316; --bg3:#1E1F23; --text:#F4F5F6; --hint:#8B8E95; --line:#26272B;
+  --accent:#F7A707; --accent-2:#FFBE4D; --accent-text:#000000; --up:#1FD187; --down:#FF5666;
+  --up-bg:rgba(31,209,135,.14); --down-bg:rgba(255,86,102,.14);
+  --sheet:#0E0F11; --scrim:rgba(0,0,0,.72);
   --body:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color-scheme:dark;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
 }
-@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#0F1320 } }
-:root[data-theme="dark"]{ --bg:#0F1320 }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#000000 } }
+:root[data-theme="dark"]{ --bg:#000000 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-tap-highlight-color:transparent}
 body{min-height:100vh}
@@ -32,17 +32,17 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 
 /* top */
 .top{display:flex;align-items:center;gap:8px;padding:4px 0 14px}
-.acct{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:14px}
-.ava{width:28px;height:28px;border-radius:50%;background:conic-gradient(from 210deg,#8F7BFF,#4FD1E8,#8F7BFF);display:grid;place-items:center;color:var(--accent-text);font-weight:800;font-size:13px}
+.acct{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:14px;max-width:62%}
+.acct #uname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ava{width:28px;height:28px;border-radius:50%;background:conic-gradient(from 210deg,#F7A707,#FFD36B,#F7A707);display:grid;place-items:center;color:var(--accent-text);font-weight:800;font-size:13px;flex:none}
 .sp{flex:1}
 .icon-btn{width:36px;height:36px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;color:var(--hint)}
 .icon-btn svg{width:18px;height:18px}
 
 /* balance card */
 .card{position:relative;border-radius:22px;padding:18px 18px 0;background:var(--bg2);overflow:hidden;border:1px solid var(--line)}
-.card::before{content:"";position:absolute;inset:-40% -20% auto auto;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(143,123,255,.28),transparent 65%);pointer-events:none}
+.card::before{content:"";position:absolute;inset:-40% -20% auto auto;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(247,167,7,.22),transparent 65%);pointer-events:none}
 .bal-label{font-size:13px;color:var(--hint);display:flex;align-items:center;gap:6px}
-.bal-label button{color:var(--hint);display:grid}
 .bal-num{font-weight:800;font-size:clamp(32px,10vw,42px);letter-spacing:-.025em;line-height:1.1;margin:6px 0 8px}
 .bal-num .cents{color:var(--hint);font-weight:700}
 .pnl{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--hint)}
@@ -70,7 +70,9 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 
 /* rows */
 .row{display:flex;align-items:center;gap:12px;padding:12px 0;width:100%;text-align:left}
-.coin{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.coin{position:relative;overflow:hidden;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.coin i{font-style:normal;position:relative;z-index:0}
+.coin img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:inherit;z-index:1}
 .row .mid{flex:1;min-width:0}
 .row .mid b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700}
 .row .mid small{font-size:13px;color:var(--hint)}
@@ -86,7 +88,7 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .demo{font-size:12px;color:var(--hint);text-align:center;margin-top:18px}
 
 /* bottom nav */
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(15,19,32,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(0,0,0,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
 .nav-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .nav button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 10px;font-size:11px;font-weight:600;color:var(--hint)}
 .nav button svg{width:22px;height:22px}
@@ -98,8 +100,8 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:480px;margin:0 auto;background:var(--sheet);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow-y:auto}
 .sheet.on{transform:none}
 .grab{width:36px;height:4px;border-radius:2px;background:var(--bg3);margin:0 auto 12px}
-.sheet h2{font-size:18px;font-weight:800;margin:0 0 16px;display:flex;justify-content:space-between;align-items:center}
-.close{width:30px;height:30px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;color:var(--hint)}
+.sheet h2{font-size:18px;font-weight:800;margin:0 0 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.close{width:30px;height:30px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;color:var(--hint);flex:none}
 .close svg{width:14px;height:14px}
 .field{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
 .field:focus-within{border-color:var(--accent)}
@@ -110,7 +112,7 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .pill{background:var(--bg3);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;color:var(--accent-2);white-space:nowrap}
 .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
 .chip{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:12px;background:var(--bg2);font-weight:700;font-size:14px;flex:none;border:1px solid var(--line)}
-.chip[aria-pressed="true"]{border-color:var(--accent);background:rgba(143,123,255,.12)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:rgba(247,167,7,.12)}
 .chip .coin{width:24px;height:24px;font-size:10px}
 .kv{display:flex;justify-content:space-between;font-size:14px;padding:6px 2px;color:var(--hint)}
 .kv b{color:var(--text);font-weight:600}
@@ -118,6 +120,7 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .primary{width:100%;background:var(--accent);color:var(--accent-text);border-radius:14px;padding:15px;font-weight:800;font-size:16px;margin-top:6px}
 .primary:disabled{opacity:.35;cursor:default}
 .ghost{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:700;font-size:15px}
+.danger{color:var(--down)}
 .swapmid{display:flex;justify-content:center;margin:-17px 0 -7px;position:relative;z-index:1}
 .swapmid button{width:40px;height:40px;border-radius:12px;background:var(--bg3);color:var(--accent-2);display:grid;place-items:center;border:4px solid var(--sheet)}
 .swapmid svg{width:16px;height:16px}
@@ -132,11 +135,31 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .ranges button[aria-pressed="true"]{background:var(--bg3);color:var(--text)}
 .chart{width:100%;height:180px;display:block}
 .done{text-align:center;padding:20px 0 8px}
-.done .ok{width:72px;height:72px;border-radius:22px;background:var(--up);color:#0F1320;display:grid;place-items:center;margin:0 auto 14px;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.done .ok{width:72px;height:72px;border-radius:22px;background:var(--up);color:#000;display:grid;place-items:center;margin:0 auto 14px;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
 .done .ok svg{width:34px;height:34px}
 .done h3{font-size:24px;font-weight:800;margin:0 0 6px}
 .done p{color:var(--hint);margin:0 0 20px;font-size:14px}
 @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+
+/* wallets */
+.wrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);margin-bottom:8px;width:100%;text-align:left}
+.wrow[aria-current="true"]{border-color:var(--accent)}
+.wrow .wav{width:40px;height:40px;border-radius:12px;background:var(--bg3);display:grid;place-items:center;font-weight:800;color:var(--accent-2);flex:none}
+.wrow .mid{flex:1;min-width:0}
+.wrow .mid b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700}
+.wrow .mid small{display:block;font-size:12px;color:var(--hint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wbadge{font-size:10px;font-weight:700;color:var(--hint);background:var(--bg3);padding:2px 7px;border-radius:6px}
+.mini{width:32px;height:32px;border-radius:10px;background:var(--bg3);display:grid;place-items:center;color:var(--hint);flex:none}
+.mini svg{width:15px;height:15px}
+.wact{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.warn{background:var(--down-bg);border:1px solid rgba(255,86,102,.3);color:#FF8A96;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.5;margin-bottom:12px}
+.phrase{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
+.phrase span{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.phrase span i{color:var(--hint);font-style:normal;width:18px;text-align:right;font-size:12px}
+.notice{text-align:center;padding:16px 0 10px;color:var(--hint);font-size:14px;line-height:1.5}
+.notice .ic{width:60px;height:60px;border-radius:18px;background:var(--bg2);display:grid;place-items:center;margin:0 auto 12px;color:var(--accent-2)}
+.notice .ic svg{width:26px;height:26px}
+
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.25s;z-index:20;pointer-events:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .hide{display:none!important}
@@ -146,10 +169,10 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 <body>
 <div class="app">
   <header class="top">
-    <button class="acct" id="addrBtn" aria-label="Скопировать адрес"><span class="ava" id="ava">V</span><span id="uname">Кошелёк 1</span>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+    <button class="acct" id="acctBtn" aria-label="Выбрать кошелёк"><span class="ava" id="ava">V</span><span id="uname">Кошелёк</span>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="flex:none"><path d="M6 9l6 6 6-6"/></svg></button>
     <span class="sp"></span>
-    <button class="icon-btn" data-open="receive" aria-label="Сканировать QR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg></button>
+    <button class="icon-btn" data-open="receive" aria-label="Показать QR-код"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg></button>
     <button class="icon-btn" id="eyeBtn" aria-label="Скрыть баланс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
   </header>
 
@@ -205,47 +228,72 @@ const notify = (t='success') => { try{ tg && tg.HapticFeedback.notificationOccur
 if (tg) {
   try {
     tg.ready(); tg.expand();
-    tg.setHeaderColor && tg.setHeaderColor('#0F1320');
-    tg.setBackgroundColor && tg.setBackgroundColor('#0F1320');
-    tg.setBottomBarColor && tg.setBottomBarColor('#0F1320');
-    const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-    if (u && u.first_name) document.getElementById('ava').textContent = u.first_name[0];
+    tg.setHeaderColor && tg.setHeaderColor('#000000');
+    tg.setBackgroundColor && tg.setBackgroundColor('#000000');
+    tg.setBottomBarColor && tg.setBottomBarColor('#000000');
     tg.BackButton.onClick(() => closeSheet());
   } catch(e){}
 }
 
-/* ---------- State ---------- */
-const DEFAULT = {
-  hidden:false,
-  assets:[
-    {sym:'TON', name:'Toncoin', net:'TON', price:5.42, bal:128.5, color:'#0098EA', fee:0.01, dp:2},
-    {sym:'USDT', name:'Tether', net:'TON', price:1.00, bal:342.1, color:'#26A17B', fee:0.5, dp:2},
-    {sym:'BTC', name:'Bitcoin', net:'BTC', price:67240, bal:0.0142, color:'#F7931A', fee:0.00002, dp:6},
-    {sym:'ETH', name:'Ethereum', net:'ETH', price:3215, bal:0.215, color:'#627EEA', fee:0.0004, dp:4},
-    {sym:'NOT', name:'Notcoin', net:'TON', price:0.0081, bal:18500, color:'#4A5068', fee:10, dp:0},
-  ],
+/* ---------- Market (global) ---------- */
+const MARKET=[
+  {sym:'TON', name:'Toncoin', net:'TON', price:5.42, color:'#0098EA', fee:0.01, dp:2},
+  {sym:'USDT', name:'Tether', net:'TON', price:1.00, color:'#26A17B', fee:0.5, dp:2},
+  {sym:'BTC', name:'Bitcoin', net:'BTC', price:67240, color:'#F7931A', fee:0.00002, dp:6},
+  {sym:'ETH', name:'Ethereum', net:'ETH', price:3215, color:'#627EEA', fee:0.0004, dp:4},
+  {sym:'NOT', name:'Notcoin', net:'TON', price:0.0081, color:'#4A5068', fee:10, dp:0},
+];
+MARKET.forEach(a=>{ a.hist=Array.from({length:30},(_,i)=>a.price*(1+Math.sin(i/3+a.sym.length)*0.01)); a.hist.push(a.price); a.chg=a.sym==='USDT'?0.01:(Math.random()-0.4)*6; });
+const A=s=>MARKET.find(a=>a.sym===s);
+
+const ICON={
+  BTC:['https://cryptologos.cc/logos/bitcoin-btc-logo.svg','https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/btc.svg'],
+  ETH:['https://cryptologos.cc/logos/ethereum-eth-logo.svg','https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/eth.svg'],
+  USDT:['https://cryptologos.cc/logos/tether-usdt-logo.svg','https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/usdt.svg'],
+  TON:['https://cryptologos.cc/logos/toncoin-ton-logo.svg'],
+  NOT:['https://cryptologos.cc/logos/notcoin-not-logo.svg'],
+};
+window.coinErr=function(el){ try{ let fb=JSON.parse(el.dataset.fb||'[]'); if(fb.length){ el.src=fb.shift(); el.dataset.fb=JSON.stringify(fb); } else el.style.display='none'; }catch(e){ el.style.display='none'; } };
+
+/* ---------- Wallets state ---------- */
+const newId=()=>'w'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const B64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+const rstr=(ch,n)=>{ let s=''; for(let i=0;i<n;i++) s+=ch[Math.floor(Math.random()*ch.length)]; return s; };
+const genAddrSet=()=>({ TON:'UQ'+rstr(B64,46), BTC:'bc1q'+rstr('023456789acdefghjklmnpqrstuvwxyz',38), ETH:'0x'+rstr('0123456789abcdef',40) });
+const WORDS='apple orbit cable delta ember frost grove hazel input jolly kiosk lunar maple noble ocean pearl quartz raven solar tiger umbra vivid wafer xenon yield zebra amber brisk cedar drift eagle flint glide hollow ivory jewel karma lemon mango nectar opal prism quill ripple'.split(' ');
+const genPhrase=()=>Array.from({length:12},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join(' ');
+const DEFWALLET=()=>({
+  id:newId(), name:'Основной', watch:false,
+  addr:{TON:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2', BTC:'bc1q9h7garjhd4qmcx5ws3n8tqk2vla0ypfe6x8r3z', ETH:'0x7A3fE19c2B8d04E6a5F1c9D3b2E8a7C4f6D1e09B'},
+  bal:{TON:128.5,USDT:342.1,BTC:0.0142,ETH:0.215,NOT:18500},
   history:[
     {type:'in', sym:'TON', amt:50, who:'UQCk…2mPa', t:Date.now()-86400000*1.2},
     {type:'swap', sym:'USDT', amt:100, to:'TON', toAmt:18.3, t:Date.now()-86400000*3},
     {type:'out', sym:'USDT', amt:25, who:'UQA9…xL0e', t:Date.now()-86400000*6},
   ]
-};
+});
 let S;
-try { S = JSON.parse(localStorage.getItem('vaultpro')) } catch(e){}
-if (!S || !S.assets) S = JSON.parse(JSON.stringify(DEFAULT));
-S.assets.forEach(a => { a.hist = Array.from({length:30}, (_,i) => a.price*(1+Math.sin(i/3+a.sym.length)*0.01)); a.hist.push(a.price); a.chg = a.sym==='USDT' ? 0.01 : (Math.random()-0.4)*6; });
-const save = () => { try{ localStorage.setItem('vaultpro', JSON.stringify({hidden:S.hidden, assets:S.assets.map(({hist,chg,...a})=>a), history:S.history})) }catch(e){} };
-const A = s => S.assets.find(a => a.sym === s);
+try{ S=JSON.parse(localStorage.getItem('vaultpro2')) }catch(e){}
+if(!S || !Array.isArray(S.wallets) || !S.wallets.length){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; }
+if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
+const save=()=>{ try{ localStorage.setItem('vaultpro2', JSON.stringify({hidden:S.hidden,active:S.active,wallets:S.wallets})) }catch(e){} };
+const W=()=>S.wallets.find(w=>w.id===S.active)||S.wallets[0];
+const bal=s=>(W().bal[s]||0);
 
 /* ---------- Format ---------- */
-const usd = (v, dp) => '$' + v.toLocaleString('ru-RU', {minimumFractionDigits: dp ?? (v<1?4:2), maximumFractionDigits: dp ?? (v<1?4:2)});
-const amt = (v, a) => v.toLocaleString('ru-RU', {maximumFractionDigits: a.dp}) + ' ' + a.sym;
-const pct = v => (v>=0?'+':'') + v.toFixed(2).replace('.',',') + '%';
-const mask = s => S.hidden ? '••••' : s;
-const ago = t => { const d=(Date.now()-t)/60000; if(d<1)return'только что'; if(d<60)return Math.floor(d)+' мин назад'; if(d<1440)return Math.floor(d/60)+' ч назад'; return new Date(t).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) };
-const coin = a => `<span class="coin" style="background:${a.color}">${a.sym.slice(0,a.sym.length>3?2:1)}</span>`;
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function path(vals, w, h, pad=2){
+const usd=(v,dp)=>'$'+v.toLocaleString('ru-RU',{minimumFractionDigits:dp??(v<1?4:2),maximumFractionDigits:dp??(v<1?4:2)});
+const amt=(v,a)=>v.toLocaleString('ru-RU',{maximumFractionDigits:a.dp})+' '+a.sym;
+const pct=v=>(v>=0?'+':'')+v.toFixed(2).replace('.',',')+'%';
+const mask=s=>S.hidden?'••••':s;
+const ago=t=>{ const d=(Date.now()-t)/60000; if(d<1)return'только что'; if(d<60)return Math.floor(d)+' мин назад'; if(d<1440)return Math.floor(d/60)+' ч назад'; return new Date(t).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) };
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shortAddr=x=>!x?'':(x.length>14?x.slice(0,5)+'…'+x.slice(-5):x);
+function coin(a){
+  const u=ICON[a.sym]||[], l=a.sym.slice(0,a.sym.length>3?2:1);
+  const img=u.length?`<img src="${u[0]}" alt="" loading="lazy" data-fb='${JSON.stringify(u.slice(1))}' onerror="coinErr(this)">`:'';
+  return `<span class="coin" style="background:${a.color}"><i>${l}</i>${img}</span>`;
+}
+function path(vals,w,h,pad=2){
   const mn=Math.min(...vals), mx=Math.max(...vals), rg=(mx-mn)||1;
   return vals.map((v,i)=>`${i?'L':'M'}${(i/(vals.length-1)*w).toFixed(1)},${(pad+(h-pad*2)*(1-(v-mn)/rg)).toFixed(1)}`).join('');
 }
@@ -254,35 +302,37 @@ function path(vals, w, h, pad=2){
 let view='home', tab='assets';
 function totals(){
   let now=0, open=0;
-  S.assets.forEach(a=>{ now+=a.bal*a.price; open+=a.bal*a.price/(1+a.chg/100) });
+  MARKET.forEach(a=>{ const b=bal(a.sym); now+=b*a.price; open+=b*a.price/(1+a.chg/100) });
   return {now, diff:now-open, p: open?((now-open)/open*100):0};
 }
 let tapeHist=[];
 function render(){
+  const w=W();
+  document.getElementById('uname').textContent=w.name;
+  document.getElementById('ava').textContent=(w.name.trim()[0]||'V').toUpperCase();
   const t=totals();
   const [i,c]=t.now.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}).split(',');
-  document.getElementById('total').innerHTML = S.hidden ? '$••••••' : `$${i}<span class="cents">,${c}</span>`;
+  document.getElementById('total').innerHTML=S.hidden?'$••••••':`$${i}<span class="cents">,${c}</span>`;
   const d=document.getElementById('delta'), pv=document.getElementById('pnlv');
   d.className='chg num '+(t.diff>=0?'up':'down'); d.textContent=S.hidden?'••':pct(t.p);
   pv.className='num '+(t.diff>=0?'up':'down'); pv.textContent=S.hidden?'••••':`${t.diff>=0?'+':'−'}${usd(Math.abs(t.diff),2)}`;
   tapeHist.push(t.now); if(tapeHist.length>60) tapeHist.shift();
-  if (tapeHist.length>1){
-    const p=path(tapeHist,400,64,8);
-    document.getElementById('tape').innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F7BFF" stop-opacity=".35"/><stop offset="1" stop-color="#8F7BFF" stop-opacity="0"/></linearGradient></defs><path d="${p}L400,64L0,64Z" fill="url(#tg)"/><path d="${p}" fill="none" stroke="#B6A9FF" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  if(tapeHist.length>1){ const p=path(tapeHist,400,64,8);
+    document.getElementById('tape').innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7A707" stop-opacity=".35"/><stop offset="1" stop-color="#F7A707" stop-opacity="0"/></linearGradient></defs><path d="${p}L400,64L0,64Z" fill="url(#tg)"/><path d="${p}" fill="none" stroke="#FFBE4D" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
   }
-  document.getElementById('count').textContent = tab==='assets' ? S.assets.length+' токенов' : S.history.length+' операций';
+  document.getElementById('count').textContent=tab==='assets'?MARKET.length+' токенов':w.history.length+' операций';
   const L=document.getElementById('list');
-  if (view==='market'){
-    L.innerHTML=S.assets.map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
+  if(view==='market'){
+    L.innerHTML=MARKET.map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
       <span class="mid"><b>${a.sym}<span class="tagnet">${a.net}</span></b><small class="num">${usd(a.price)}</small></span>
       <svg class="spark" viewBox="0 0 60 26"><path d="${path(a.hist.slice(-24),60,26)}" fill="none" stroke="${a.chg>=0?'var(--up)':'var(--down)'}" stroke-width="1.6"/></svg>
       <span class="chg wide num ${a.chg>=0?'up':'down'}">${pct(a.chg)}</span></button>`).join('');
-  } else if (tab==='assets'){
-    L.innerHTML=[...S.assets].sort((a,b)=>b.bal*b.price-a.bal*a.price).map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
+  } else if(tab==='assets'){
+    L.innerHTML=[...MARKET].sort((a,b)=>bal(b.sym)*b.price-bal(a.sym)*a.price).map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
       <span class="mid"><b>${a.sym}<span class="tagnet">${a.net}</span></b><small class="num">${usd(a.price)} <span class="${a.chg>=0?'up':'down'}">${pct(a.chg)}</span></small></span>
-      <span class="end"><b class="num">${mask(amt(a.bal,a).replace(' '+a.sym,''))}</b><small class="num">${mask(usd(a.bal*a.price,2))}</small></span></button>`).join('');
+      <span class="end"><b class="num">${mask(amt(bal(a.sym),a).replace(' '+a.sym,''))}</b><small class="num">${mask(usd(bal(a.sym)*a.price,2))}</small></span></button>`).join('');
   } else {
-    L.innerHTML=S.history.length?S.history.map(h=>{
+    L.innerHTML=w.history.length?w.history.map(h=>{
       const a=A(h.sym);
       const ic=h.type==='in'?'<path d="M17 7L7 17M16 17H7V8"/>':h.type==='out'?'<path d="M7 17L17 7M8 7h9v9"/>':'<path d="M4 8h14l-4-4M20 16H6l4 4"/>';
       const title=h.type==='in'?'Получено':h.type==='out'?'Отправлено':'Обмен';
@@ -295,8 +345,8 @@ function render(){
   }
 }
 function go(v){
-  view = v==='market' ? 'market' : 'home';
-  if (v==='history') tab='history'; else if (v==='home') tab='assets';
+  view=v==='market'?'market':'home';
+  if(v==='history') tab='history'; else if(v==='home') tab='assets';
   document.getElementById('home').classList.toggle('hide', view==='market');
   document.getElementById('marketHead').classList.toggle('hide', view!=='market');
   document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected', x.dataset.tab===tab));
@@ -305,37 +355,45 @@ function go(v){
 }
 
 setInterval(()=>{
-  S.assets.forEach(a=>{
-    if (a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
+  MARKET.forEach(a=>{
+    if(a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
     else { const r=(Math.random()-0.49)*0.006; a.price*=1+r; a.chg+=r*100; }
     a.hist.push(a.price); if(a.hist.length>60) a.hist.shift();
   });
-  render(); if (openKind==='asset') updateAssetLive();
+  render(); if(openKind==='asset') updateAssetLive();
 }, 2500);
 
 /* ---------- Sheet ---------- */
 const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), body=document.getElementById('sheetBody');
 let openKind=null, ctx={};
 const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-const head=t=>`<h2>${t}<button class="close" data-close aria-label="Закрыть">${X}</button></h2>`;
+const head=t=>`<h2><span>${t}</span><button class="close" data-close aria-label="Закрыть">${X}</button></h2>`;
 const OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>';
+const CPIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+function showSheet(){ sheet.classList.add('on'); scrim.classList.add('on'); try{ tg && tg.BackButton.show() }catch(e){} }
 function openSheet(kind, opts={}){
   openKind=kind; ctx={...opts}; haptic();
-  ({send:sendView, receive:receiveView, swap:swapView, asset:assetView})[kind]();
-  sheet.classList.add('on'); scrim.classList.add('on');
-  try{ tg && tg.BackButton.show() }catch(e){}
+  if((kind==='send'||kind==='swap') && W().watch){ openKind='notice'; watchNotice(); }
+  else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView})[kind]();
+  showSheet();
 }
 function closeSheet(){ openKind=null; sheet.classList.remove('on'); scrim.classList.remove('on'); try{ tg && tg.BackButton.hide() }catch(e){} }
 scrim.onclick=closeSheet;
 sheet.addEventListener('click',e=>{ if(e.target.closest('[data-close]')) closeSheet(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
-const chips=sel=>`<div class="chips">${S.assets.map(a=>`<button class="chip" data-pick="${a.sym}" aria-pressed="${a.sym===sel}">${coin(a)}${a.sym}</button>`).join('')}</div>`;
+const chips=sel=>`<div class="chips">${MARKET.map(a=>`<button class="chip" data-pick="${a.sym}" aria-pressed="${a.sym===sel}">${coin(a)}${a.sym}</button>`).join('')}</div>`;
+
+function watchNotice(){
+  body.innerHTML=head('Только просмотр')+`<div class="notice"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+    <p>Это привязанный адрес для наблюдения. Отправка и обмен недоступны — переключитесь на кошелёк, которым владеете.</p></div>
+    <button class="primary" data-close>Понятно</button>`;
+}
 
 function sendView(){
   const a=A(ctx.sym||'TON'); ctx.sym=a.sym;
   body.innerHTML=head('Отправить')+chips(a.sym)+`
     <div class="field"><label for="to">Адрес получателя</label><input id="to" placeholder="UQ… или @username" autocomplete="off" value="${esc(ctx.to||'')}"></div>
-    <div class="field"><label for="am">Сумма · доступно ${amt(a.bal,a)}</label>
+    <div class="field"><label for="am">Сумма · доступно ${amt(bal(a.sym),a)}</label>
       <div class="line"><input id="am" class="big num" inputmode="decimal" placeholder="0" value="${ctx.am||''}"><button class="pill" id="max">Макс.</button></div></div>
     <div class="kv"><span>≈ в долларах</span><b id="usdv" class="num">$0,00</b></div>
     <div class="kv"><span>Сеть</span><b>${a.net}</b></div>
@@ -348,40 +406,48 @@ function sendView(){
     const v=parseFloat(am.value.replace(',','.'))||0;
     body.querySelector('#usdv').textContent=usd(v*a.price,2);
     let e='';
-    if (v>0&&v+a.fee>a.bal) e='Недостаточно средств с учётом комиссии';
-    else if (to.value&&to.value.trim().length<5) e='Проверьте адрес получателя';
+    if(v>0&&v+a.fee>bal(a.sym)) e='Недостаточно средств с учётом комиссии';
+    else if(to.value&&to.value.trim().length<5) e='Проверьте адрес получателя';
     err.textContent=e; gob.disabled=!!e||!v||!to.value.trim();
   };
   to.oninput=check; am.oninput=check;
-  body.querySelector('#max').onclick=()=>{ am.value=String(Math.max(0,+(a.bal-a.fee).toFixed(a.dp||2))); check(); };
+  body.querySelector('#max').onclick=()=>{ am.value=String(Math.max(0,+(bal(a.sym)-a.fee).toFixed(a.dp||2))); check(); };
   body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.am=''; haptic('soft'); sendView(); });
   gob.onclick=()=>{
     const v=parseFloat(am.value.replace(',','.'));
-    a.bal=+(a.bal-v-a.fee).toFixed(8);
-    const w=to.value.trim(), who=w.length>12?w.slice(0,4)+'…'+w.slice(-4):w;
-    S.history.unshift({type:'out',sym:a.sym,amt:v,who,t:Date.now()}); save(); render(); notify();
+    W().bal[a.sym]=+(bal(a.sym)-v-a.fee).toFixed(8);
+    const raw=to.value.trim(), who=raw.length>12?raw.slice(0,4)+'…'+raw.slice(-4):raw;
+    W().history.unshift({type:'out',sym:a.sym,amt:v,who,t:Date.now()}); save(); render(); notify();
     body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">−${amt(v,a)}</h3><p>Отправлено на ${esc(who)}</p><button class="ghost" data-close>Готово</button></div>`;
   };
   check();
 }
 
-const ADDR={TON:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',USDT:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',NOT:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',BTC:'bc1q9h7garjhd4qmcx5ws3n8tqk2vla0ypfe6x8r3z',ETH:'0x7A3fE19c2B8d04E6a5F1c9D3b2E8a7C4f6D1e09B'};
-const NET={TON:'TON',USDT:'TON (Jetton)',NOT:'TON (Jetton)',BTC:'Bitcoin',ETH:'Ethereum'};
+const NETNAME={TON:'TON',BTC:'Bitcoin',ETH:'Ethereum'};
 function receiveView(){
   const s=ctx.sym||'TON'; ctx.sym=s;
-  body.innerHTML=head('Получить')+chips(s)+`
-    <div class="qr" id="qr"></div>
-    <div class="kv"><span>Сеть</span><b>${NET[s]}</b></div>
-    <div class="addr">${ADDR[s]}</div>
-    <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="sh">Поделиться</button></div>
-    <p class="demo">Отправляйте на этот адрес только ${s} в сети ${NET[s]}.</p>`;
-  try{ new QRCode(body.querySelector('#qr'),{text:ADDR[s],width:376,height:376,colorDark:'#0F1320',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ body.querySelector('#qr').style.display='none'; }
+  const a=A(s), key=a.net, address=W().addr[key];
+  const netLabel=key==='TON'?(s==='TON'?'TON':'TON (Jetton)'):NETNAME[key];
+  let main;
+  if(address){
+    main=`<div class="qr" id="qr"></div>
+      <div class="kv"><span>Сеть</span><b>${netLabel}</b></div>
+      <div class="addr">${address}</div>
+      <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="sh">Поделиться</button></div>
+      <p class="demo">Отправляйте на этот адрес только ${s} в сети ${NETNAME[key]}.</p>`;
+  } else {
+    main=`<div class="notice"><div class="ic">${CPIC}</div><p>Для сети ${NETNAME[key]} у этого кошелька нет адреса. Выберите токен другой сети или создайте полноценный кошелёк.</p></div>`;
+  }
+  body.innerHTML=head('Получить')+chips(s)+main;
   body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; haptic('soft'); receiveView(); });
-  body.querySelector('#cp').onclick=()=>copy(ADDR[s]);
-  body.querySelector('#sh').onclick=()=>{
-    if (tg&&tg.openTelegramLink){ try{ tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(ADDR[s])+'&text='+encodeURIComponent('Мой адрес '+s)); return; }catch(e){} }
-    if (navigator.share) navigator.share({text:`Мой адрес ${s}: ${ADDR[s]}`}).catch(()=>{}); else copy(ADDR[s]);
-  };
+  if(address){
+    try{ new QRCode(body.querySelector('#qr'),{text:address,width:376,height:376,colorDark:'#000000',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ const q=body.querySelector('#qr'); if(q) q.style.display='none'; }
+    body.querySelector('#cp').onclick=()=>copy(address);
+    body.querySelector('#sh').onclick=()=>{
+      if(tg&&tg.openTelegramLink){ try{ tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(address)+'&text='+encodeURIComponent('Мой адрес '+s)); return; }catch(e){} }
+      if(navigator.share) navigator.share({text:`Мой адрес ${s}: ${address}`}).catch(()=>{}); else copy(address);
+    };
+  }
 }
 
 function swapView(){
@@ -389,7 +455,7 @@ function swapView(){
   const f=A(ctx.from), t=A(ctx.to);
   const sel=(a,k)=>`<button class="select" data-cycle="${k}">${coin(a)}${a.sym}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>`;
   body.innerHTML=head('Обменять')+`
-    <div class="field"><label for="fa">Отдаёте · доступно ${amt(f.bal,f)}</label><div class="line"><input id="fa" class="big num" inputmode="decimal" placeholder="0" value="${ctx.fa||''}">${sel(f,'from')}</div></div>
+    <div class="field"><label for="fa">Отдаёте · доступно ${amt(bal(f.sym),f)}</label><div class="line"><input id="fa" class="big num" inputmode="decimal" placeholder="0" value="${ctx.fa||''}">${sel(f,'from')}</div></div>
     <div class="swapmid"><button id="flip" aria-label="Поменять местами"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>
     <div class="field"><label>Получаете</label><div class="line"><input class="big num" id="ta" readonly value="0">${sel(t,'to')}</div></div>
     <div class="kv"><span>Курс</span><b class="num">1 ${f.sym} ≈ ${(f.price/t.price).toLocaleString('ru-RU',{maximumSignificantDigits:6})} ${t.sym}</b></div>
@@ -401,69 +467,167 @@ function swapView(){
     ctx.fa=fa.value; const v=parseFloat(fa.value.replace(',','.'))||0;
     const out=v*f.price/t.price*0.995; ctx.out=out;
     ta.value=out?out.toLocaleString('ru-RU',{maximumFractionDigits:Math.max(t.dp,4)}):'0';
-    err.textContent=v>f.bal?'Недостаточно '+f.sym:'';
-    gob.disabled=!v||v>f.bal;
+    err.textContent=v>bal(f.sym)?'Недостаточно '+f.sym:'';
+    gob.disabled=!v||v>bal(f.sym);
   };
   fa.oninput=calc;
   body.querySelector('#flip').onclick=()=>{ [ctx.from,ctx.to]=[ctx.to,ctx.from]; ctx.fa=''; haptic(); swapView(); };
   body.querySelectorAll('[data-cycle]').forEach(b=>b.onclick=()=>{
     const k=b.dataset.cycle, other=k==='from'?ctx.to:ctx.from;
-    const list=S.assets.map(a=>a.sym).filter(s=>s!==other);
+    const list=MARKET.map(a=>a.sym).filter(s=>s!==other);
     ctx[k]=list[(list.indexOf(ctx[k])+1)%list.length]; haptic('soft'); swapView();
   });
   gob.onclick=()=>{
     const v=parseFloat(fa.value.replace(',','.'));
-    f.bal=+(f.bal-v).toFixed(8); t.bal=+(t.bal+ctx.out).toFixed(8);
-    S.history.unshift({type:'swap',sym:f.sym,amt:v,to:t.sym,toAmt:+ctx.out.toFixed(8),t:Date.now()}); save(); render(); notify();
+    W().bal[f.sym]=+(bal(f.sym)-v).toFixed(8); W().bal[t.sym]=+(bal(t.sym)+ctx.out).toFixed(8);
+    W().history.unshift({type:'swap',sym:f.sym,amt:v,to:t.sym,toAmt:+ctx.out.toFixed(8),t:Date.now()}); save(); render(); notify();
     ctx.fa='';
     body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">+${amt(ctx.out,t)}</h3><p>Обменяно ${amt(v,f)}</p><button class="ghost" data-close>Готово</button></div>`;
   };
   calc();
 }
 
+/* ---------- Wallet management ---------- */
+function walletsView(){
+  openKind='wallets';
+  body.innerHTML=head('Кошельки')+S.wallets.map(w=>{
+    const tot=MARKET.reduce((s,m)=>s+(w.bal[m.sym]||0)*m.price,0);
+    const addr=w.addr.TON||Object.values(w.addr)[0]||'';
+    return `<div class="wrow" aria-current="${w.id===S.active}">
+      <button class="wav" data-wsel="${w.id}">${(w.name.trim()[0]||'W').toUpperCase()}</button>
+      <button class="mid" data-wsel="${w.id}" style="text-align:left"><b>${esc(w.name)}${w.watch?'<span class="wbadge">Просмотр</span>':''}</b><small class="num">${shortAddr(addr)} · ${usd(tot,2)}</small></button>
+      <button class="mini" data-wcopy="${esc(addr)}" aria-label="Скопировать адрес">${CPIC}</button>
+      <button class="mini" data-wedit="${w.id}" aria-label="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
+    </div>`;
+  }).join('')+`
+    <div class="wact"><button class="ghost" id="lnk">Привязать адрес</button><button class="primary" style="margin:0" id="cre">Создать кошелёк</button></div>
+    <p class="demo">Демо: адреса и балансы ненастоящие.</p>`;
+  body.querySelectorAll('[data-wsel]').forEach(b=>b.onclick=()=>{ S.active=b.dataset.wsel; save(); haptic(); render(); walletsView(); });
+  body.querySelectorAll('[data-wcopy]').forEach(b=>b.onclick=()=>{ if(b.dataset.wcopy) copy(b.dataset.wcopy); });
+  body.querySelectorAll('[data-wedit]').forEach(b=>b.onclick=()=>{ haptic('soft'); editView(b.dataset.wedit); });
+  body.querySelector('#cre').onclick=()=>{ ctx={}; haptic(); createView(); };
+  body.querySelector('#lnk').onclick=()=>{ ctx={}; haptic(); linkView(); };
+}
+function editView(id){
+  openKind='wallets';
+  const w=S.wallets.find(x=>x.id===id); if(!w) return walletsView();
+  const only=S.wallets.length<=1;
+  body.innerHTML=head('Кошелёк')+`
+    <div class="field"><label>Название</label><input id="rn" value="${esc(w.name)}" maxlength="24"></div>
+    <button class="primary" id="sv">Сохранить</button>
+    <button class="ghost" id="bk" style="margin-top:8px">Назад</button>
+    <button class="ghost danger" id="del" style="margin-top:8px" ${only?'disabled':''}>Удалить кошелёк</button>
+    ${only?'<p class="demo">Нельзя удалить единственный кошелёк.</p>':''}`;
+  body.querySelector('#sv').onclick=()=>{ const v=body.querySelector('#rn').value.trim(); if(v) w.name=v; save(); render(); notify(); walletsView(); };
+  body.querySelector('#bk').onclick=()=>walletsView();
+  body.querySelector('#del').onclick=()=>{ if(only) return; S.wallets=S.wallets.filter(x=>x.id!==id); if(S.active===id) S.active=S.wallets[0].id; save(); render(); notify('warning'); toast('Кошелёк удалён'); walletsView(); };
+}
+function createView(){
+  openKind='create';
+  const n=ctx.cname!==undefined?ctx.cname:('Кошелёк '+(S.wallets.length+1));
+  body.innerHTML=head('Создать кошелёк')+`
+    <div class="field"><label>Название</label><input id="cn" value="${esc(n)}" maxlength="24"></div>
+    <p class="demo" style="text-align:left;margin:2px 2px 14px">Будет сгенерирован новый адрес и резервная фраза. Это демонстрация — реальные средства сюда не поступят.</p>
+    <button class="primary" id="go">Создать</button>
+    <button class="ghost" id="bk" style="margin-top:8px">Назад</button>`;
+  body.querySelector('#cn').oninput=e=>ctx.cname=e.target.value;
+  body.querySelector('#bk').onclick=()=>walletsView();
+  body.querySelector('#go').onclick=()=>{
+    const name=(body.querySelector('#cn').value.trim())||('Кошелёк '+(S.wallets.length+1));
+    ctx.pending={id:newId(),name,watch:false,addr:genAddrSet(),bal:{},history:[]};
+    ctx.phrase=genPhrase(); haptic(); phraseView();
+  };
+}
+function phraseView(){
+  openKind='create';
+  const words=ctx.phrase.split(' ');
+  body.innerHTML=head('Резервная фраза')+`
+    <div class="warn">⚠️ Запишите эти 12 слов по порядку и храните офлайн. Никогда не вводите настоящую seed-фразу на сайтах и не показывайте её никому. Это демо-фраза.</div>
+    <div class="phrase">${words.map((w,i)=>`<span><i>${i+1}</i>${w}</span>`).join('')}</div>
+    <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="go">Я записал</button></div>`;
+  body.querySelector('#cp').onclick=()=>copy(ctx.phrase);
+  body.querySelector('#go').onclick=()=>{
+    S.wallets.push(ctx.pending); S.active=ctx.pending.id; save(); notify(); render();
+    toast('Кошелёк создан'); walletsView();
+  };
+}
+function linkView(){
+  openKind='link';
+  body.innerHTML=head('Привязать адрес')+`
+    <div class="field"><label>Название</label><input id="ln" placeholder="Напр. Холодный кошелёк" maxlength="24" value="${esc(ctx.lname||'')}"></div>
+    <div class="field"><label>Публичный адрес</label><input id="la" placeholder="UQ… / 0x… / bc1…" autocomplete="off" value="${esc(ctx.laddr||'')}"></div>
+    <div class="warn">Вставляйте только <b>публичный адрес</b> для наблюдения. Никогда не вводите сюда seed-фразу или приватный ключ — ни здесь, ни в любом другом приложении.</div>
+    <div class="err" id="err"></div>
+    <button class="primary" id="go" disabled>Привязать</button>
+    <button class="ghost" id="bk" style="margin-top:8px">Назад</button>`;
+  const ln=body.querySelector('#ln'), la=body.querySelector('#la'), gob=body.querySelector('#go'), err=body.querySelector('#err');
+  const check=()=>{
+    ctx.lname=ln.value; ctx.laddr=la.value;
+    const v=la.value.trim(); let e='';
+    if(v && v.split(/\s+/).length>=6) e='Похоже на seed-фразу. Вставьте публичный адрес, а не секретную фразу.';
+    else if(v && v.length<8) e='Адрес слишком короткий';
+    err.textContent=e; gob.disabled=!!e||!v;
+  };
+  ln.oninput=check; la.oninput=check;
+  body.querySelector('#bk').onclick=()=>walletsView();
+  gob.onclick=()=>{
+    const v=la.value.trim();
+    const net=v.startsWith('0x')?'ETH':(v.startsWith('bc1')||/^[13]/.test(v))?'BTC':'TON';
+    const addr={}; addr[net]=v;
+    const w={id:newId(),name:(ln.value.trim()||'Отслеживаемый'),watch:true,addr,bal:{},history:[]};
+    S.wallets.push(w); S.active=w.id; save(); notify(); render();
+    toast('Адрес привязан'); walletsView();
+  };
+  check();
+}
+
+/* ---------- Asset detail ---------- */
 function seeded(seed){ let x=0; for(const c of seed) x=(x*31+c.charCodeAt(0))>>>0; return ()=>((x=(x*1664525+1013904223)>>>0)/4294967296); }
 const RANGES={'1Д':{n:48,v:0.012},'1Н':{n:56,v:0.025},'1М':{n:60,v:0.05},'1Г':{n:72,v:0.12}};
 function series(a,r){
-  if (a.sym==='USDT') return Array.from({length:RANGES[r].n},(_,i)=>1+Math.sin(i)*0.0008);
+  if(a.sym==='USDT') return Array.from({length:RANGES[r].n},(_,i)=>1+Math.sin(i)*0.0008);
   const rnd=seeded(a.sym+r),{n,v}=RANGES[r]; const arr=[1];
   for(let i=1;i<n;i++) arr.push(arr[i-1]*(1+(rnd()-0.48)*v*0.35));
   const k=a.price/arr[n-1]; return arr.map(x=>x*k);
 }
 function assetView(){
   const a=A(ctx.sym); ctx.range=ctx.range||'1Д';
+  const watch=W().watch;
   body.innerHTML=`<h2><span style="display:flex;align-items:center;gap:10px">${coin(a)}${a.name}<span class="tagnet">${a.net}</span></span><button class="close" data-close aria-label="Закрыть">${X}</button></h2>
     <div class="bal-num num" id="ap" style="font-size:32px">${usd(a.price)}</div>
     <span class="chg num" id="ac"></span>
     <svg class="chart" id="ach" viewBox="0 0 400 180" preserveAspectRatio="none"></svg>
     <div class="ranges">${Object.keys(RANGES).map(r=>`<button data-range="${r}" aria-pressed="${r===ctx.range}">${r}</button>`).join('')}</div>
-    <div class="field" style="display:flex;justify-content:space-between;align-items:center"><span><label style="margin:0">Баланс</label><b class="num" style="font-size:17px">${mask(amt(a.bal,a))}</b></span><b id="av" class="num" style="font-size:17px">${mask(usd(a.bal*a.price,2))}</b></div>
-    <div class="two"><button class="ghost" data-go="receive">Получить</button><button class="primary" style="margin:0" data-go="send">Отправить</button></div>`;
+    <div class="field" style="display:flex;justify-content:space-between;align-items:center"><span><label style="margin:0">Баланс</label><b class="num" style="font-size:17px">${mask(amt(bal(a.sym),a))}</b></span><b id="av" class="num" style="font-size:17px">${mask(usd(bal(a.sym)*a.price,2))}</b></div>
+    <div class="two"><button class="ghost" data-go="receive">Получить</button><button class="primary" style="margin:0" data-go="send">Отправить</button></div>
+    ${watch?'<p class="demo">Привязанный адрес — только просмотр.</p>':''}`;
   body.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{ ctx.range=b.dataset.range; haptic('soft'); assetView(); });
   body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openSheet(b.dataset.go,{sym:a.sym}));
   updateAssetLive();
 }
 function updateAssetLive(){
   const a=A(ctx.sym), s=series(a,ctx.range), ch=(s[s.length-1]/s[0]-1)*100, up=ch>=0;
-  const hex=up?'#2BD39A':'#FF5C7A', p=path(s,400,180,10);
+  const hex=up?'#1FD187':'#FF5666', p=path(s,400,180,10);
   body.querySelector('#ap').textContent=usd(a.price);
   const c=body.querySelector('#ac'); c.className='chg num '+(up?'up':'down'); c.textContent=pct(ch)+' за '+({'1Д':'день','1Н':'неделю','1М':'месяц','1Г':'год'})[ctx.range];
-  const av=body.querySelector('#av'); if(av) av.textContent=mask(usd(a.bal*a.price,2));
-  const grid=[45,90,135].map(y=>`<line x1="0" x2="400" y1="${y}" y2="${y}" stroke="#262C42" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`).join('');
+  const av=body.querySelector('#av'); if(av) av.textContent=mask(usd(bal(a.sym)*a.price,2));
+  const grid=[45,90,135].map(y=>`<line x1="0" x2="400" y1="${y}" y2="${y}" stroke="#26272B" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`).join('');
   body.querySelector('#ach').innerHTML=`${grid}<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hex}" stop-opacity=".28"/><stop offset="1" stop-color="${hex}" stop-opacity="0"/></linearGradient></defs><path d="${p}L400,180L0,180Z" fill="url(#ag)"/><path d="${p}" fill="none" stroke="${hex}" stroke-width="2.2" vector-effect="non-scaling-stroke"/>`;
 }
 
+/* ---------- Misc ---------- */
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),1600); }
 function copy(txt){
-  const ok=()=>{ toast('Адрес скопирован'); notify(); };
+  const ok=()=>{ toast('Скопировано'); notify(); };
   const fallback=()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); ok();}catch(e){toast('Не удалось скопировать');} ta.remove(); };
-  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(fallback); else fallback();
+  if(navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(fallback); else fallback();
 }
 document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSheet(b.dataset.open));
 document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>go(b.dataset.nav));
+document.getElementById('acctBtn').onclick=()=>openSheet('wallets');
 document.getElementById('list').addEventListener('click',e=>{ const r=e.target.closest('[data-asset]'); if(r) openSheet('asset',{sym:r.dataset.asset}); });
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab==='history'?'history':'home'));
 document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
-document.getElementById('addrBtn').onclick=()=>copy(ADDR.TON);
 render();
 </script>
 </body>
