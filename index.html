@@ -164,6 +164,26 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.25s;z-index:20;pointer-events:none}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 .hide{display:none!important}
+
+/* welcome / onboarding */
+.welcome{position:fixed;inset:0;z-index:50;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:0 24px calc(34px + env(safe-area-inset-bottom,0px))}
+.wl-bg{position:absolute;inset:0;background:radial-gradient(120% 75% at 50% -5%, rgba(247,167,7,.30), transparent 62%);pointer-events:none}
+.wl-coins{position:absolute;inset:0;top:0;height:58%;pointer-events:none}
+.wl-coins .c{position:absolute;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:#fff;box-shadow:0 12px 34px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.14);animation:wlfloat 6s ease-in-out infinite}
+.wl-coins .c1{background:#0098EA;left:16%;top:20%;animation-delay:0s}
+.wl-coins .c2{background:#F7931A;right:14%;top:14%;width:62px;height:62px;animation-delay:-1.4s}
+.wl-coins .c3{background:#26A17B;left:26%;top:52%;width:46px;height:46px;animation-delay:-2.6s}
+.wl-coins .c4{background:#627EEA;right:20%;top:50%;animation-delay:-3.6s}
+.wl-coins .c5{background:#EF0027;left:46%;top:30%;width:44px;height:44px;animation-delay:-2s}
+.wl-card{position:relative;z-index:1;text-align:center;animation:wlup .6s cubic-bezier(.2,.8,.2,1)}
+.wl-logo{width:76px;height:76px;border-radius:24px;margin:0 auto 20px;background:linear-gradient(135deg,#F7A707,#FFD36B);display:grid;place-items:center;color:#000;box-shadow:0 14px 44px rgba(247,167,7,.42)}
+.wl-logo svg{width:40px;height:40px}
+.welcome h1{font-size:33px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px}
+.welcome p{color:var(--hint);font-size:15px;line-height:1.55;margin:0 auto 26px;max-width:330px}
+.wl-link{display:block;width:100%;margin-top:10px;color:var(--hint);font-weight:600;padding:12px}
+@keyframes wlfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-20px) rotate(4deg)}}
+@keyframes wlup{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -220,6 +240,20 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 <div class="scrim" id="scrim"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
 <div class="toast" id="toast"></div>
+
+<div id="welcome" class="welcome hide">
+  <div class="wl-bg"></div>
+  <div class="wl-coins">
+    <span class="c c1">TON</span><span class="c c2">₿</span><span class="c c3">$</span><span class="c c4">Ξ</span><span class="c c5">T</span>
+  </div>
+  <div class="wl-card">
+    <div class="wl-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 7l4 2.5v5L12 17l-4-2.5v-5L12 7z"/></svg></div>
+    <h1>Vault Pro</h1>
+    <p>Мультивалютный крипто-кошелёк прямо в Telegram. Храните, отслеживайте и отправляйте TON, USDT, BTC, ETH и другие — в реальном времени.</p>
+    <button class="primary" id="wlCreate">Создать кошелёк</button>
+    <button class="wl-link" id="wlConnect">У меня уже есть кошелёк</button>
+  </div>
+</div>
 
 <script>
 const tg = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined ? window.Telegram.WebApp : null;
@@ -361,7 +395,7 @@ async function refreshWallet(w){
 /* ---------- TON Connect (connect own wallet / sign real transfers, no secret phrase) ---------- */
 let tcui=null;
 // ВАЖНО: замените на адрес вашего размещённого манифеста
-const TONCONNECT_MANIFEST='https://YOUR-DOMAIN/tonconnect-manifest.json';
+const TONCONNECT_MANIFEST='https://bybitweb3-app.github.io/web3app/tonconnect-manifest.json';
 function tonConnectInit(){
   if(tcui || !window.TON_CONNECT_UI) return tcui;
   try{
@@ -842,11 +876,19 @@ document.getElementById('list').addEventListener('click',e=>{ const r=e.target.c
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab==='history'?'history':'home'));
 document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
 
+function showWelcome(){
+  const el=document.getElementById('welcome'); if(!el) return;
+  el.classList.remove('hide');
+  el.querySelector('#wlCreate').onclick=()=>{ haptic(); el.classList.add('hide'); toast('Кошелёк готов'); };
+  el.querySelector('#wlConnect').onclick=()=>{ haptic(); el.classList.add('hide'); tonConnect(); };
+}
 async function init(){
-  S=await DB.load();
-  if(!S || !Array.isArray(S.wallets) || !S.wallets.length){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; save(); }
+  const loaded=await DB.load();
+  const fresh=!loaded || !Array.isArray(loaded.wallets) || !loaded.wallets.length;
+  if(fresh){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; save(); } else S=loaded;
   if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
   render();
+  if(fresh) showWelcome();
   tonConnectInit();
   fetchPrices(); startWs();
   setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
