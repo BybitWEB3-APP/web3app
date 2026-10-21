@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Vault Pro</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0F1320; --bg2:#181D2E; --bg3:#22283D; --text:#EEF1F8; --hint:#8089A3; --line:#262C42;
+  --accent:#8F7BFF; --accent-2:#B6A9FF; --accent-text:#0F1320; --up:#2BD39A; --down:#FF5C7A;
+  --up-bg:rgba(43,211,154,.14); --down-bg:rgba(255,92,122,.14);
+  --sheet:#161B2B; --scrim:rgba(4,6,14,.7);
+  --body:"Golos Text", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg:#0F1320 } }
+:root[data-theme="dark"]{ --bg:#0F1320 }
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-tap-highlight-color:transparent}
+body{min-height:100vh}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.app{max-width:480px;margin:0 auto;padding:10px 16px calc(96px + env(safe-area-inset-bottom,0px))}
+
+/* top */
+.top{display:flex;align-items:center;gap:8px;padding:4px 0 14px}
+.acct{display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:999px;padding:4px 12px 4px 4px;font-weight:600;font-size:14px}
+.ava{width:28px;height:28px;border-radius:50%;background:conic-gradient(from 210deg,#8F7BFF,#4FD1E8,#8F7BFF);display:grid;place-items:center;color:var(--accent-text);font-weight:800;font-size:13px}
+.sp{flex:1}
+.icon-btn{width:36px;height:36px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;color:var(--hint)}
+.icon-btn svg{width:18px;height:18px}
+
+/* balance card */
+.card{position:relative;border-radius:22px;padding:18px 18px 0;background:var(--bg2);overflow:hidden;border:1px solid var(--line)}
+.card::before{content:"";position:absolute;inset:-40% -20% auto auto;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,rgba(143,123,255,.28),transparent 65%);pointer-events:none}
+.bal-label{font-size:13px;color:var(--hint);display:flex;align-items:center;gap:6px}
+.bal-label button{color:var(--hint);display:grid}
+.bal-num{font-weight:800;font-size:clamp(32px,10vw,42px);letter-spacing:-.025em;line-height:1.1;margin:6px 0 8px}
+.bal-num .cents{color:var(--hint);font-weight:700}
+.pnl{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--hint)}
+.chg{display:inline-block;padding:3px 8px;border-radius:8px;font-weight:700;font-size:13px}
+.chg.up{color:var(--up);background:var(--up-bg)} .chg.down{color:var(--down);background:var(--down-bg)}
+.up{color:var(--up)} .down{color:var(--down)}
+.tape{height:64px;margin:10px -18px 0;display:block;width:calc(100% + 36px)}
+
+/* actions */
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:16px 0 20px}
+.act{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--hint)}
+.act span.i{width:50px;height:50px;border-radius:16px;background:var(--bg2);border:1px solid var(--line);color:var(--text);display:grid;place-items:center;transition:transform .12s}
+.act:first-child span.i{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.act:active span.i{transform:scale(.92)}
+.act svg{width:20px;height:20px}
+
+/* section head */
+.sec{display:flex;align-items:center;justify-content:space-between;margin:2px 0 6px}
+.seg{display:flex;background:var(--bg2);border-radius:12px;padding:3px}
+.seg button{padding:7px 14px;border-radius:9px;font-weight:600;font-size:14px;color:var(--hint)}
+.seg button[aria-selected="true"]{background:var(--bg3);color:var(--text)}
+.sec small{font-size:12px;color:var(--hint)}
+h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
+.colhead{display:flex;justify-content:space-between;font-size:12px;color:var(--hint);padding:10px 0 2px}
+
+/* rows */
+.row{display:flex;align-items:center;gap:12px;padding:12px 0;width:100%;text-align:left}
+.coin{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.row .mid{flex:1;min-width:0}
+.row .mid b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700}
+.row .mid small{font-size:13px;color:var(--hint)}
+.tagnet{font-size:10px;font-weight:600;color:var(--hint);background:var(--bg3);padding:2px 6px;border-radius:6px}
+.row .end{text-align:right}
+.row .end b{display:block;font-size:15px;font-weight:700}
+.row .end small{font-size:13px;color:var(--hint)}
+.spark{width:60px;height:26px;flex:none}
+.tx-ic{width:40px;height:40px;border-radius:12px;background:var(--bg2);display:grid;place-items:center;flex:none}
+.tx-ic svg{width:18px;height:18px}
+.chg.wide{min-width:76px;text-align:center;padding:7px 0}
+.empty{padding:40px 8px;text-align:center;color:var(--hint);font-size:14px}
+.demo{font-size:12px;color:var(--hint);text-align:center;margin-top:18px}
+
+/* bottom nav */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(15,19,32,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.nav-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 0 10px;font-size:11px;font-weight:600;color:var(--hint)}
+.nav button svg{width:22px;height:22px}
+.nav button[aria-current="true"]{color:var(--accent-2)}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .25s;z-index:10}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:11;max-width:480px;margin:0 auto;background:var(--sheet);border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:8px 16px calc(20px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .3s cubic-bezier(.2,.8,.2,1);max-height:92vh;overflow-y:auto}
+.sheet.on{transform:none}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--bg3);margin:0 auto 12px}
+.sheet h2{font-size:18px;font-weight:800;margin:0 0 16px;display:flex;justify-content:space-between;align-items:center}
+.close{width:30px;height:30px;border-radius:10px;background:var(--bg2);display:grid;place-items:center;color:var(--hint)}
+.close svg{width:14px;height:14px}
+.field{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:10px}
+.field:focus-within{border-color:var(--accent)}
+.field label{display:block;font-size:12px;color:var(--hint);margin-bottom:4px}
+.field input{width:100%;border:0;background:none;color:var(--text);font:inherit;font-size:16px;outline:none;padding:2px 0}
+.field .line{display:flex;align-items:center;gap:8px}
+.field .big{font-size:24px;font-weight:800}
+.pill{background:var(--bg3);border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;color:var(--accent-2);white-space:nowrap}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px;scrollbar-width:none}
+.chip{display:flex;align-items:center;gap:6px;padding:5px 12px 5px 5px;border-radius:12px;background:var(--bg2);font-weight:700;font-size:14px;flex:none;border:1px solid var(--line)}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:rgba(143,123,255,.12)}
+.chip .coin{width:24px;height:24px;font-size:10px}
+.kv{display:flex;justify-content:space-between;font-size:14px;padding:6px 2px;color:var(--hint)}
+.kv b{color:var(--text);font-weight:600}
+.err{color:var(--down);font-size:13px;min-height:18px;margin:2px 2px 8px}
+.primary{width:100%;background:var(--accent);color:var(--accent-text);border-radius:14px;padding:15px;font-weight:800;font-size:16px;margin-top:6px}
+.primary:disabled{opacity:.35;cursor:default}
+.ghost{width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:14px;font-weight:700;font-size:15px}
+.swapmid{display:flex;justify-content:center;margin:-17px 0 -7px;position:relative;z-index:1}
+.swapmid button{width:40px;height:40px;border-radius:12px;background:var(--bg3);color:var(--accent-2);display:grid;place-items:center;border:4px solid var(--sheet)}
+.swapmid svg{width:16px;height:16px}
+.select{display:flex;align-items:center;gap:6px;background:var(--bg3);border-radius:12px;padding:4px 10px 4px 4px;font-weight:700;font-size:14px}
+.select .coin{width:24px;height:24px;font-size:10px}
+.qr{background:#fff;padding:14px;border-radius:18px;width:max-content;margin:4px auto 14px}
+.qr img,.qr canvas{display:block;width:188px!important;height:188px!important}
+.addr{font-size:14px;word-break:break-all;text-align:center;background:var(--bg2);border:1px solid var(--line);padding:12px 14px;border-radius:14px;margin-bottom:12px;line-height:1.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ranges{display:flex;gap:6px;margin:6px 0 14px}
+.ranges button{flex:1;padding:7px 0;border-radius:10px;font-size:13px;font-weight:700;color:var(--hint)}
+.ranges button[aria-pressed="true"]{background:var(--bg3);color:var(--text)}
+.chart{width:100%;height:180px;display:block}
+.done{text-align:center;padding:20px 0 8px}
+.done .ok{width:72px;height:72px;border-radius:22px;background:var(--up);color:#0F1320;display:grid;place-items:center;margin:0 auto 14px;animation:pop .4s cubic-bezier(.2,1.4,.4,1)}
+.done .ok svg{width:34px;height:34px}
+.done h3{font-size:24px;font-weight:800;margin:0 0 6px}
+.done p{color:var(--hint);margin:0 0 20px;font-size:14px}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--bg3);color:var(--text);border:1px solid var(--line);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transition:.25s;z-index:20;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <button class="acct" id="addrBtn" aria-label="Скопировать адрес"><span class="ava" id="ava">V</span><span id="uname">Кошелёк 1</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button>
+    <span class="sp"></span>
+    <button class="icon-btn" data-open="receive" aria-label="Сканировать QR"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/></svg></button>
+    <button class="icon-btn" id="eyeBtn" aria-label="Скрыть баланс"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+  </header>
+
+  <div id="home">
+    <section class="card">
+      <div class="bal-label">Общая стоимость активов, USD</div>
+      <div class="bal-num num" id="total">$0</div>
+      <div class="pnl">PnL за 24 ч <span class="num" id="pnlv"></span><span class="chg num" id="delta"></span></div>
+      <svg class="tape" id="tape" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true"></svg>
+    </section>
+
+    <nav class="actions">
+      <button class="act" data-open="send"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M7 17L17 7M8 7h9v9"/></svg></span>Отправить</button>
+      <button class="act" data-open="receive"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M17 7L7 17M16 17H7V8"/></svg></span>Получить</button>
+      <button class="act" data-open="swap"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg></span>Обменять</button>
+      <button class="act" data-nav="market"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 19h16M7 15l4-5 3 3 5-6"/></svg></span>Рынок</button>
+    </nav>
+
+    <div class="sec">
+      <div class="seg" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="assets">Токены</button>
+        <button role="tab" aria-selected="false" data-tab="history">История</button>
+      </div>
+      <small id="count"></small>
+    </div>
+  </div>
+
+  <div id="marketHead" class="hide">
+    <h1 class="page">Рынок</h1>
+    <div class="colhead"><span>Токен / цена</span><span>Изм. 24 ч</span></div>
+  </div>
+
+  <div id="list"></div>
+  <p class="demo">Демо-режим: цены и балансы симулируются</p>
+</div>
+
+<nav class="nav"><div class="nav-in">
+  <button data-nav="home" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h10"/></svg>Кошелёк</button>
+  <button data-nav="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19h16M7 15l4-5 3 3 5-6"/></svg>Рынок</button>
+  <button data-open="swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Обмен</button>
+  <button data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>История</button>
+</div></nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheetBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const tg = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined ? window.Telegram.WebApp : null;
+const haptic = (t='light') => { try{ tg && tg.HapticFeedback.impactOccurred(t) }catch(e){} };
+const notify = (t='success') => { try{ tg && tg.HapticFeedback.notificationOccurred(t) }catch(e){} };
+
+if (tg) {
+  try {
+    tg.ready(); tg.expand();
+    tg.setHeaderColor && tg.setHeaderColor('#0F1320');
+    tg.setBackgroundColor && tg.setBackgroundColor('#0F1320');
+    tg.setBottomBarColor && tg.setBottomBarColor('#0F1320');
+    const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    if (u && u.first_name) document.getElementById('ava').textContent = u.first_name[0];
+    tg.BackButton.onClick(() => closeSheet());
+  } catch(e){}
+}
+
+/* ---------- State ---------- */
+const DEFAULT = {
+  hidden:false,
+  assets:[
+    {sym:'TON', name:'Toncoin', net:'TON', price:5.42, bal:128.5, color:'#0098EA', fee:0.01, dp:2},
+    {sym:'USDT', name:'Tether', net:'TON', price:1.00, bal:342.1, color:'#26A17B', fee:0.5, dp:2},
+    {sym:'BTC', name:'Bitcoin', net:'BTC', price:67240, bal:0.0142, color:'#F7931A', fee:0.00002, dp:6},
+    {sym:'ETH', name:'Ethereum', net:'ETH', price:3215, bal:0.215, color:'#627EEA', fee:0.0004, dp:4},
+    {sym:'NOT', name:'Notcoin', net:'TON', price:0.0081, bal:18500, color:'#4A5068', fee:10, dp:0},
+  ],
+  history:[
+    {type:'in', sym:'TON', amt:50, who:'UQCk…2mPa', t:Date.now()-86400000*1.2},
+    {type:'swap', sym:'USDT', amt:100, to:'TON', toAmt:18.3, t:Date.now()-86400000*3},
+    {type:'out', sym:'USDT', amt:25, who:'UQA9…xL0e', t:Date.now()-86400000*6},
+  ]
+};
+let S;
+try { S = JSON.parse(localStorage.getItem('vaultpro')) } catch(e){}
+if (!S || !S.assets) S = JSON.parse(JSON.stringify(DEFAULT));
+S.assets.forEach(a => { a.hist = Array.from({length:30}, (_,i) => a.price*(1+Math.sin(i/3+a.sym.length)*0.01)); a.hist.push(a.price); a.chg = a.sym==='USDT' ? 0.01 : (Math.random()-0.4)*6; });
+const save = () => { try{ localStorage.setItem('vaultpro', JSON.stringify({hidden:S.hidden, assets:S.assets.map(({hist,chg,...a})=>a), history:S.history})) }catch(e){} };
+const A = s => S.assets.find(a => a.sym === s);
+
+/* ---------- Format ---------- */
+const usd = (v, dp) => '$' + v.toLocaleString('ru-RU', {minimumFractionDigits: dp ?? (v<1?4:2), maximumFractionDigits: dp ?? (v<1?4:2)});
+const amt = (v, a) => v.toLocaleString('ru-RU', {maximumFractionDigits: a.dp}) + ' ' + a.sym;
+const pct = v => (v>=0?'+':'') + v.toFixed(2).replace('.',',') + '%';
+const mask = s => S.hidden ? '••••' : s;
+const ago = t => { const d=(Date.now()-t)/60000; if(d<1)return'только что'; if(d<60)return Math.floor(d)+' мин назад'; if(d<1440)return Math.floor(d/60)+' ч назад'; return new Date(t).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) };
+const coin = a => `<span class="coin" style="background:${a.color}">${a.sym.slice(0,a.sym.length>3?2:1)}</span>`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function path(vals, w, h, pad=2){
+  const mn=Math.min(...vals), mx=Math.max(...vals), rg=(mx-mn)||1;
+  return vals.map((v,i)=>`${i?'L':'M'}${(i/(vals.length-1)*w).toFixed(1)},${(pad+(h-pad*2)*(1-(v-mn)/rg)).toFixed(1)}`).join('');
+}
+
+/* ---------- Render ---------- */
+let view='home', tab='assets';
+function totals(){
+  let now=0, open=0;
+  S.assets.forEach(a=>{ now+=a.bal*a.price; open+=a.bal*a.price/(1+a.chg/100) });
+  return {now, diff:now-open, p: open?((now-open)/open*100):0};
+}
+let tapeHist=[];
+function render(){
+  const t=totals();
+  const [i,c]=t.now.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2}).split(',');
+  document.getElementById('total').innerHTML = S.hidden ? '$••••••' : `$${i}<span class="cents">,${c}</span>`;
+  const d=document.getElementById('delta'), pv=document.getElementById('pnlv');
+  d.className='chg num '+(t.diff>=0?'up':'down'); d.textContent=S.hidden?'••':pct(t.p);
+  pv.className='num '+(t.diff>=0?'up':'down'); pv.textContent=S.hidden?'••••':`${t.diff>=0?'+':'−'}${usd(Math.abs(t.diff),2)}`;
+  tapeHist.push(t.now); if(tapeHist.length>60) tapeHist.shift();
+  if (tapeHist.length>1){
+    const p=path(tapeHist,400,64,8);
+    document.getElementById('tape').innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8F7BFF" stop-opacity=".35"/><stop offset="1" stop-color="#8F7BFF" stop-opacity="0"/></linearGradient></defs><path d="${p}L400,64L0,64Z" fill="url(#tg)"/><path d="${p}" fill="none" stroke="#B6A9FF" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+  }
+  document.getElementById('count').textContent = tab==='assets' ? S.assets.length+' токенов' : S.history.length+' операций';
+  const L=document.getElementById('list');
+  if (view==='market'){
+    L.innerHTML=S.assets.map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
+      <span class="mid"><b>${a.sym}<span class="tagnet">${a.net}</span></b><small class="num">${usd(a.price)}</small></span>
+      <svg class="spark" viewBox="0 0 60 26"><path d="${path(a.hist.slice(-24),60,26)}" fill="none" stroke="${a.chg>=0?'var(--up)':'var(--down)'}" stroke-width="1.6"/></svg>
+      <span class="chg wide num ${a.chg>=0?'up':'down'}">${pct(a.chg)}</span></button>`).join('');
+  } else if (tab==='assets'){
+    L.innerHTML=[...S.assets].sort((a,b)=>b.bal*b.price-a.bal*a.price).map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
+      <span class="mid"><b>${a.sym}<span class="tagnet">${a.net}</span></b><small class="num">${usd(a.price)} <span class="${a.chg>=0?'up':'down'}">${pct(a.chg)}</span></small></span>
+      <span class="end"><b class="num">${mask(amt(a.bal,a).replace(' '+a.sym,''))}</b><small class="num">${mask(usd(a.bal*a.price,2))}</small></span></button>`).join('');
+  } else {
+    L.innerHTML=S.history.length?S.history.map(h=>{
+      const a=A(h.sym);
+      const ic=h.type==='in'?'<path d="M17 7L7 17M16 17H7V8"/>':h.type==='out'?'<path d="M7 17L17 7M8 7h9v9"/>':'<path d="M4 8h14l-4-4M20 16H6l4 4"/>';
+      const title=h.type==='in'?'Получено':h.type==='out'?'Отправлено':'Обмен';
+      const sub=h.type==='swap'?`${h.sym} → ${h.to}`:(h.type==='in'?'от ':'на ')+esc(h.who);
+      const val=h.type==='in'?`<b class="up num">+${amt(h.amt,a)}</b>`:h.type==='out'?`<b class="num">−${amt(h.amt,a)}</b>`:`<b class="up num">+${amt(h.toAmt,A(h.to))}</b>`;
+      const sub2=h.type==='swap'?`−${amt(h.amt,a)}`:ago(h.t);
+      return `<div class="row"><span class="tx-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">${ic}</svg></span>
+        <span class="mid"><b>${title}</b><small>${sub}</small></span><span class="end">${S.hidden?'<b>••••</b>':val}<small class="num">${sub2}</small></span></div>`;
+    }).join(''):'<div class="empty">Операций пока нет. Пополните кошелёк через «Получить».</div>';
+  }
+}
+function go(v){
+  view = v==='market' ? 'market' : 'home';
+  if (v==='history') tab='history'; else if (v==='home') tab='assets';
+  document.getElementById('home').classList.toggle('hide', view==='market');
+  document.getElementById('marketHead').classList.toggle('hide', view!=='market');
+  document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected', x.dataset.tab===tab));
+  document.querySelectorAll('.nav [data-nav]').forEach(x=>x.setAttribute('aria-current', x.dataset.nav===(view==='market'?'market':tab==='history'?'history':'home')));
+  haptic('soft'); render(); window.scrollTo({top:0});
+}
+
+setInterval(()=>{
+  S.assets.forEach(a=>{
+    if (a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
+    else { const r=(Math.random()-0.49)*0.006; a.price*=1+r; a.chg+=r*100; }
+    a.hist.push(a.price); if(a.hist.length>60) a.hist.shift();
+  });
+  render(); if (openKind==='asset') updateAssetLive();
+}, 2500);
+
+/* ---------- Sheet ---------- */
+const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), body=document.getElementById('sheetBody');
+let openKind=null, ctx={};
+const X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const head=t=>`<h2>${t}<button class="close" data-close aria-label="Закрыть">${X}</button></h2>`;
+const OK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5 9-10"/></svg>';
+function openSheet(kind, opts={}){
+  openKind=kind; ctx={...opts}; haptic();
+  ({send:sendView, receive:receiveView, swap:swapView, asset:assetView})[kind]();
+  sheet.classList.add('on'); scrim.classList.add('on');
+  try{ tg && tg.BackButton.show() }catch(e){}
+}
+function closeSheet(){ openKind=null; sheet.classList.remove('on'); scrim.classList.remove('on'); try{ tg && tg.BackButton.hide() }catch(e){} }
+scrim.onclick=closeSheet;
+sheet.addEventListener('click',e=>{ if(e.target.closest('[data-close]')) closeSheet(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeSheet(); });
+const chips=sel=>`<div class="chips">${S.assets.map(a=>`<button class="chip" data-pick="${a.sym}" aria-pressed="${a.sym===sel}">${coin(a)}${a.sym}</button>`).join('')}</div>`;
+
+function sendView(){
+  const a=A(ctx.sym||'TON'); ctx.sym=a.sym;
+  body.innerHTML=head('Отправить')+chips(a.sym)+`
+    <div class="field"><label for="to">Адрес получателя</label><input id="to" placeholder="UQ… или @username" autocomplete="off" value="${esc(ctx.to||'')}"></div>
+    <div class="field"><label for="am">Сумма · доступно ${amt(a.bal,a)}</label>
+      <div class="line"><input id="am" class="big num" inputmode="decimal" placeholder="0" value="${ctx.am||''}"><button class="pill" id="max">Макс.</button></div></div>
+    <div class="kv"><span>≈ в долларах</span><b id="usdv" class="num">$0,00</b></div>
+    <div class="kv"><span>Сеть</span><b>${a.net}</b></div>
+    <div class="kv"><span>Комиссия сети</span><b class="num">${amt(a.fee,a)}</b></div>
+    <div class="err" id="err"></div>
+    <button class="primary" id="go" disabled>Отправить</button>`;
+  const to=body.querySelector('#to'), am=body.querySelector('#am'), gob=body.querySelector('#go'), err=body.querySelector('#err');
+  const check=()=>{
+    ctx.to=to.value; ctx.am=am.value;
+    const v=parseFloat(am.value.replace(',','.'))||0;
+    body.querySelector('#usdv').textContent=usd(v*a.price,2);
+    let e='';
+    if (v>0&&v+a.fee>a.bal) e='Недостаточно средств с учётом комиссии';
+    else if (to.value&&to.value.trim().length<5) e='Проверьте адрес получателя';
+    err.textContent=e; gob.disabled=!!e||!v||!to.value.trim();
+  };
+  to.oninput=check; am.oninput=check;
+  body.querySelector('#max').onclick=()=>{ am.value=String(Math.max(0,+(a.bal-a.fee).toFixed(a.dp||2))); check(); };
+  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; ctx.am=''; haptic('soft'); sendView(); });
+  gob.onclick=()=>{
+    const v=parseFloat(am.value.replace(',','.'));
+    a.bal=+(a.bal-v-a.fee).toFixed(8);
+    const w=to.value.trim(), who=w.length>12?w.slice(0,4)+'…'+w.slice(-4):w;
+    S.history.unshift({type:'out',sym:a.sym,amt:v,who,t:Date.now()}); save(); render(); notify();
+    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">−${amt(v,a)}</h3><p>Отправлено на ${esc(who)}</p><button class="ghost" data-close>Готово</button></div>`;
+  };
+  check();
+}
+
+const ADDR={TON:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',USDT:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',NOT:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2',BTC:'bc1q9h7garjhd4qmcx5ws3n8tqk2vla0ypfe6x8r3z',ETH:'0x7A3fE19c2B8d04E6a5F1c9D3b2E8a7C4f6D1e09B'};
+const NET={TON:'TON',USDT:'TON (Jetton)',NOT:'TON (Jetton)',BTC:'Bitcoin',ETH:'Ethereum'};
+function receiveView(){
+  const s=ctx.sym||'TON'; ctx.sym=s;
+  body.innerHTML=head('Получить')+chips(s)+`
+    <div class="qr" id="qr"></div>
+    <div class="kv"><span>Сеть</span><b>${NET[s]}</b></div>
+    <div class="addr">${ADDR[s]}</div>
+    <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="sh">Поделиться</button></div>
+    <p class="demo">Отправляйте на этот адрес только ${s} в сети ${NET[s]}.</p>`;
+  try{ new QRCode(body.querySelector('#qr'),{text:ADDR[s],width:376,height:376,colorDark:'#0F1320',colorLight:'#FFFFFF',correctLevel:QRCode.CorrectLevel.M}); }catch(e){ body.querySelector('#qr').style.display='none'; }
+  body.querySelectorAll('[data-pick]').forEach(b=>b.onclick=()=>{ ctx.sym=b.dataset.pick; haptic('soft'); receiveView(); });
+  body.querySelector('#cp').onclick=()=>copy(ADDR[s]);
+  body.querySelector('#sh').onclick=()=>{
+    if (tg&&tg.openTelegramLink){ try{ tg.openTelegramLink('https://t.me/share/url?url='+encodeURIComponent(ADDR[s])+'&text='+encodeURIComponent('Мой адрес '+s)); return; }catch(e){} }
+    if (navigator.share) navigator.share({text:`Мой адрес ${s}: ${ADDR[s]}`}).catch(()=>{}); else copy(ADDR[s]);
+  };
+}
+
+function swapView(){
+  ctx.from=ctx.from||'USDT'; ctx.to=ctx.to||'TON';
+  const f=A(ctx.from), t=A(ctx.to);
+  const sel=(a,k)=>`<button class="select" data-cycle="${k}">${coin(a)}${a.sym}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 9l6 6 6-6"/></svg></button>`;
+  body.innerHTML=head('Обменять')+`
+    <div class="field"><label for="fa">Отдаёте · доступно ${amt(f.bal,f)}</label><div class="line"><input id="fa" class="big num" inputmode="decimal" placeholder="0" value="${ctx.fa||''}">${sel(f,'from')}</div></div>
+    <div class="swapmid"><button id="flip" aria-label="Поменять местами"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></svg></button></div>
+    <div class="field"><label>Получаете</label><div class="line"><input class="big num" id="ta" readonly value="0">${sel(t,'to')}</div></div>
+    <div class="kv"><span>Курс</span><b class="num">1 ${f.sym} ≈ ${(f.price/t.price).toLocaleString('ru-RU',{maximumSignificantDigits:6})} ${t.sym}</b></div>
+    <div class="kv"><span>Комиссия сервиса</span><b>0,5%</b></div>
+    <div class="err" id="err"></div>
+    <button class="primary" id="go" disabled>Обменять</button>`;
+  const fa=body.querySelector('#fa'), ta=body.querySelector('#ta'), gob=body.querySelector('#go'), err=body.querySelector('#err');
+  const calc=()=>{
+    ctx.fa=fa.value; const v=parseFloat(fa.value.replace(',','.'))||0;
+    const out=v*f.price/t.price*0.995; ctx.out=out;
+    ta.value=out?out.toLocaleString('ru-RU',{maximumFractionDigits:Math.max(t.dp,4)}):'0';
+    err.textContent=v>f.bal?'Недостаточно '+f.sym:'';
+    gob.disabled=!v||v>f.bal;
+  };
+  fa.oninput=calc;
+  body.querySelector('#flip').onclick=()=>{ [ctx.from,ctx.to]=[ctx.to,ctx.from]; ctx.fa=''; haptic(); swapView(); };
+  body.querySelectorAll('[data-cycle]').forEach(b=>b.onclick=()=>{
+    const k=b.dataset.cycle, other=k==='from'?ctx.to:ctx.from;
+    const list=S.assets.map(a=>a.sym).filter(s=>s!==other);
+    ctx[k]=list[(list.indexOf(ctx[k])+1)%list.length]; haptic('soft'); swapView();
+  });
+  gob.onclick=()=>{
+    const v=parseFloat(fa.value.replace(',','.'));
+    f.bal=+(f.bal-v).toFixed(8); t.bal=+(t.bal+ctx.out).toFixed(8);
+    S.history.unshift({type:'swap',sym:f.sym,amt:v,to:t.sym,toAmt:+ctx.out.toFixed(8),t:Date.now()}); save(); render(); notify();
+    ctx.fa='';
+    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">+${amt(ctx.out,t)}</h3><p>Обменяно ${amt(v,f)}</p><button class="ghost" data-close>Готово</button></div>`;
+  };
+  calc();
+}
+
+function seeded(seed){ let x=0; for(const c of seed) x=(x*31+c.charCodeAt(0))>>>0; return ()=>((x=(x*1664525+1013904223)>>>0)/4294967296); }
+const RANGES={'1Д':{n:48,v:0.012},'1Н':{n:56,v:0.025},'1М':{n:60,v:0.05},'1Г':{n:72,v:0.12}};
+function series(a,r){
+  if (a.sym==='USDT') return Array.from({length:RANGES[r].n},(_,i)=>1+Math.sin(i)*0.0008);
+  const rnd=seeded(a.sym+r),{n,v}=RANGES[r]; const arr=[1];
+  for(let i=1;i<n;i++) arr.push(arr[i-1]*(1+(rnd()-0.48)*v*0.35));
+  const k=a.price/arr[n-1]; return arr.map(x=>x*k);
+}
+function assetView(){
+  const a=A(ctx.sym); ctx.range=ctx.range||'1Д';
+  body.innerHTML=`<h2><span style="display:flex;align-items:center;gap:10px">${coin(a)}${a.name}<span class="tagnet">${a.net}</span></span><button class="close" data-close aria-label="Закрыть">${X}</button></h2>
+    <div class="bal-num num" id="ap" style="font-size:32px">${usd(a.price)}</div>
+    <span class="chg num" id="ac"></span>
+    <svg class="chart" id="ach" viewBox="0 0 400 180" preserveAspectRatio="none"></svg>
+    <div class="ranges">${Object.keys(RANGES).map(r=>`<button data-range="${r}" aria-pressed="${r===ctx.range}">${r}</button>`).join('')}</div>
+    <div class="field" style="display:flex;justify-content:space-between;align-items:center"><span><label style="margin:0">Баланс</label><b class="num" style="font-size:17px">${mask(amt(a.bal,a))}</b></span><b id="av" class="num" style="font-size:17px">${mask(usd(a.bal*a.price,2))}</b></div>
+    <div class="two"><button class="ghost" data-go="receive">Получить</button><button class="primary" style="margin:0" data-go="send">Отправить</button></div>`;
+  body.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{ ctx.range=b.dataset.range; haptic('soft'); assetView(); });
+  body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openSheet(b.dataset.go,{sym:a.sym}));
+  updateAssetLive();
+}
+function updateAssetLive(){
+  const a=A(ctx.sym), s=series(a,ctx.range), ch=(s[s.length-1]/s[0]-1)*100, up=ch>=0;
+  const hex=up?'#2BD39A':'#FF5C7A', p=path(s,400,180,10);
+  body.querySelector('#ap').textContent=usd(a.price);
+  const c=body.querySelector('#ac'); c.className='chg num '+(up?'up':'down'); c.textContent=pct(ch)+' за '+({'1Д':'день','1Н':'неделю','1М':'месяц','1Г':'год'})[ctx.range];
+  const av=body.querySelector('#av'); if(av) av.textContent=mask(usd(a.bal*a.price,2));
+  const grid=[45,90,135].map(y=>`<line x1="0" x2="400" y1="${y}" y2="${y}" stroke="#262C42" stroke-dasharray="3 5" vector-effect="non-scaling-stroke"/>`).join('');
+  body.querySelector('#ach').innerHTML=`${grid}<defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hex}" stop-opacity=".28"/><stop offset="1" stop-color="${hex}" stop-opacity="0"/></linearGradient></defs><path d="${p}L400,180L0,180Z" fill="url(#ag)"/><path d="${p}" fill="none" stroke="${hex}" stroke-width="2.2" vector-effect="non-scaling-stroke"/>`;
+}
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),1600); }
+function copy(txt){
+  const ok=()=>{ toast('Адрес скопирован'); notify(); };
+  const fallback=()=>{ const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy'); ok();}catch(e){toast('Не удалось скопировать');} ta.remove(); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok).catch(fallback); else fallback();
+}
+document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSheet(b.dataset.open));
+document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>go(b.dataset.nav));
+document.getElementById('list').addEventListener('click',e=>{ const r=e.target.closest('[data-asset]'); if(r) openSheet('asset',{sym:r.dataset.asset}); });
+document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab==='history'?'history':'home'));
+document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
+document.getElementById('addrBtn').onclick=()=>copy(ADDR.TON);
+render();
+</script>
+</body>
+</html>
