@@ -265,21 +265,23 @@ const rstr=(ch,n)=>{ let s=''; for(let i=0;i<n;i++) s+=ch[Math.floor(Math.random
 const genAddrSet=()=>({ TON:'UQ'+rstr(B64,46), BTC:'bc1q'+rstr('023456789acdefghjklmnpqrstuvwxyz',38), ETH:'0x'+rstr('0123456789abcdef',40) });
 const WORDS='apple orbit cable delta ember frost grove hazel input jolly kiosk lunar maple noble ocean pearl quartz raven solar tiger umbra vivid wafer xenon yield zebra amber brisk cedar drift eagle flint glide hollow ivory jewel karma lemon mango nectar opal prism quill ripple'.split(' ');
 const genPhrase=()=>Array.from({length:12},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join(' ');
-const DEFWALLET=()=>({
-  id:newId(), name:'Основной', watch:false,
-  addr:{TON:'UQBxK7mZq3vT8dLp2Rw9NcYeF4hJs6GaU1oXi5bVt0Ek9fK2', BTC:'bc1q9h7garjhd4qmcx5ws3n8tqk2vla0ypfe6x8r3z', ETH:'0x7A3fE19c2B8d04E6a5F1c9D3b2E8a7C4f6D1e09B'},
-  bal:{TON:128.5,USDT:342.1,BTC:0.0142,ETH:0.215,NOT:18500},
-  history:[
-    {type:'in', sym:'TON', amt:50, who:'UQCk…2mPa', t:Date.now()-86400000*1.2},
-    {type:'swap', sym:'USDT', amt:100, to:'TON', toAmt:18.3, t:Date.now()-86400000*3},
-    {type:'out', sym:'USDT', amt:25, who:'UQA9…xL0e', t:Date.now()-86400000*6},
-  ]
-});
-let S;
-try{ S=JSON.parse(localStorage.getItem('vaultpro2')) }catch(e){}
-if(!S || !Array.isArray(S.wallets) || !S.wallets.length){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; }
-if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
-const save=()=>{ try{ localStorage.setItem('vaultpro2', JSON.stringify({hidden:S.hidden,active:S.active,wallets:S.wallets})) }catch(e){} };
+/* У каждого пользователя — свой, уникально сгенерированный кошелёк (не общий демо-адрес) */
+const DEFWALLET=()=>({ id:newId(), name:'Мой кошелёк', watch:false, addr:genAddrSet(), bal:{}, history:[] });
+
+/* Хранилище: Telegram CloudStorage (отдельно для каждого юзера, синхрон между устройствами),
+   с запасом в localStorage. Секреты сюда не пишутся. */
+let S=null;
+const DB={
+  cloud: !!(tg && tg.CloudStorage && tg.CloudStorage.getItem),
+  load(){ return new Promise(res=>{
+    const fromLocal=()=>{ try{ res(JSON.parse(localStorage.getItem('vaultpro2'))) }catch(e){ res(null) } };
+    if(this.cloud){ try{ tg.CloudStorage.getItem('vp_state',(e,v)=>{ if(!e&&v){ try{ return res(JSON.parse(v)); }catch(_){} } fromLocal(); }); return; }catch(e){} }
+    fromLocal();
+  }); },
+  save(obj){ const s=JSON.stringify(obj); try{ localStorage.setItem('vaultpro2', s) }catch(e){} if(this.cloud){ try{ tg.CloudStorage.setItem('vp_state', s, ()=>{}) }catch(e){} } }
+};
+function trimState(){ return { hidden:S.hidden, active:S.active, wallets:S.wallets.map(w=>({id:w.id,name:w.name,watch:w.watch,connected:w.connected,addr:w.addr,bal:w.bal,history:(w.history||[]).slice(0,15)})) }; }
+function save(){ if(S) DB.save(trimState()); }
 const W=()=>S.wallets.find(w=>w.id===S.active)||S.wallets[0];
 const bal=s=>(W().bal[s]||0);
 
@@ -465,6 +467,7 @@ function startWs(){
 }
 
 setInterval(()=>{
+  if(!S) return;
   if(!pricesLive){
     MARKET.forEach(a=>{
       if(a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
@@ -474,10 +477,6 @@ setInterval(()=>{
     render(); if(openKind==='asset') updateAssetLive();
   } else if(!wsLive){ render(); if(openKind==='asset') updateAssetLive(); }
 }, 2500);
-fetchPrices();
-startWs();
-setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
-setInterval(()=>{ const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w); }, 30000);
 
 /* ---------- Sheet ---------- */
 const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), body=document.getElementById('sheetBody');
@@ -767,7 +766,18 @@ document.getElementById('acctBtn').onclick=()=>openSheet('wallets');
 document.getElementById('list').addEventListener('click',e=>{ const r=e.target.closest('[data-asset]'); if(r) openSheet('asset',{sym:r.dataset.asset}); });
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab==='history'?'history':'home'));
 document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
-render();
+
+async function init(){
+  S=await DB.load();
+  if(!S || !Array.isArray(S.wallets) || !S.wallets.length){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; save(); }
+  if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
+  render();
+  fetchPrices(); startWs();
+  setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
+  setInterval(()=>{ const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w); }, 30000);
+  const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w);
+}
+init();
 </script>
 </body>
 </html>
