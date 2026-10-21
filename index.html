@@ -6,6 +6,7 @@
 <title>Vault Pro</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -206,7 +207,7 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
   </div>
 
   <div id="list"></div>
-  <p class="demo">Демо-режим: цены и балансы симулируются</p>
+  <p class="demo" id="footnote">Цены загружаются…</p>
 </div>
 
 <nav class="nav"><div class="nav-in">
@@ -242,6 +243,7 @@ const MARKET=[
   {sym:'BTC', name:'Bitcoin', net:'BTC', price:67240, color:'#F7931A', fee:0.00002, dp:6},
   {sym:'ETH', name:'Ethereum', net:'ETH', price:3215, color:'#627EEA', fee:0.0004, dp:4},
   {sym:'NOT', name:'Notcoin', net:'TON', price:0.0081, color:'#4A5068', fee:10, dp:0},
+  {sym:'TRX', name:'TRON', net:'TRON', price:0.16, color:'#EF0027', fee:1, dp:2},
 ];
 MARKET.forEach(a=>{ a.hist=Array.from({length:30},(_,i)=>a.price*(1+Math.sin(i/3+a.sym.length)*0.01)); a.hist.push(a.price); a.chg=a.sym==='USDT'?0.01:(Math.random()-0.4)*6; });
 const A=s=>MARKET.find(a=>a.sym===s);
@@ -252,6 +254,7 @@ const ICON={
   USDT:['https://cryptologos.cc/logos/tether-usdt-logo.svg','https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/usdt.svg'],
   TON:['https://cryptologos.cc/logos/toncoin-ton-logo.svg'],
   NOT:['https://cryptologos.cc/logos/notcoin-not-logo.svg'],
+  TRX:['https://cryptologos.cc/logos/tron-trx-logo.svg','https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/trx.svg'],
 };
 window.coinErr=function(el){ try{ let fb=JSON.parse(el.dataset.fb||'[]'); if(fb.length){ el.src=fb.shift(); el.dataset.fb=JSON.stringify(fb); } else el.style.display='none'; }catch(e){ el.style.display='none'; } };
 
@@ -279,6 +282,68 @@ if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
 const save=()=>{ try{ localStorage.setItem('vaultpro2', JSON.stringify({hidden:S.hidden,active:S.active,wallets:S.wallets})) }catch(e){} };
 const W=()=>S.wallets.find(w=>w.id===S.active)||S.wallets[0];
 const bal=s=>(W().bal[s]||0);
+
+/* ---------- Real on-chain balance (read-only, public API) ---------- */
+async function fetchTonBalances(address){
+  const out={};
+  try{
+    const acc=await (await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(address)}`)).json();
+    if(acc && acc.balance!=null) out.TON=Number(acc.balance)/1e9;
+    const jr=await (await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(address)}/jettons`)).json();
+    for(const b of ((jr&&jr.balances)||[])){
+      const sym=((b.jetton&&b.jetton.symbol)||'').toUpperCase();
+      const dec=(b.jetton&&b.jetton.decimals!=null)?b.jetton.decimals:9;
+      if(sym && A(sym)) out[sym]=Number(b.balance)/Math.pow(10,dec);
+    }
+  }catch(e){}
+  return out;
+}
+async function fetchTronBalances(address){
+  const out={};
+  try{
+    const r=await fetch(`https://api.trongrid.io/v1/accounts/${encodeURIComponent(address)}`);
+    const j=await r.json();
+    const d=j&&j.data&&j.data[0];
+    if(d){
+      if(d.balance!=null) out.TRX=Number(d.balance)/1e6;
+      const USDT_TRC20='TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t';
+      for(const m of (d.trc20||[])){ if(m[USDT_TRC20]!=null) out.USDT=Number(m[USDT_TRC20])/1e6; }
+    }
+  }catch(e){}
+  return out;
+}
+async function refreshWallet(w){
+  if(!w || !w.addr) return;
+  let live={};
+  if(w.addr.TON) live=await fetchTonBalances(w.addr.TON);
+  else if(w.addr.TRON) live=await fetchTronBalances(w.addr.TRON);
+  else return;
+  if(Object.keys(live).length){ w.bal=Object.assign({},w.bal,live); w.live=true; save(); render(); }
+  else if(w.watch) toast('Не удалось получить баланс');
+}
+
+/* ---------- TON Connect (connect own wallet, no secret phrase) ---------- */
+let tcui=null;
+// ВАЖНО: замените на адрес вашего размещённого манифеста
+const TONCONNECT_MANIFEST='https://YOUR-DOMAIN/tonconnect-manifest.json';
+function tonConnect(){
+  if(!window.TON_CONNECT_UI){ toast('TON Connect недоступен'); return; }
+  try{
+    if(!tcui){
+      tcui=new TON_CONNECT_UI.TonConnectUI({manifestUrl:TONCONNECT_MANIFEST});
+      tcui.onStatusChange(wc=>{
+        if(wc && wc.account && wc.account.address){
+          const addr=wc.account.address;
+          let ex=S.wallets.find(x=>x.addr&&x.addr.TON===addr);
+          if(!ex){ ex={id:newId(),name:'Подключённый',watch:true,connected:true,addr:{TON:addr},bal:{},history:[]}; S.wallets.push(ex); }
+          S.active=ex.id; save(); render(); refreshWallet(ex);
+          closeSheet(); notify(); toast('Кошелёк подключён');
+        }
+      });
+    }
+    tcui.openModal();
+  }catch(e){ toast('Ошибка TON Connect'); }
+}
 
 /* ---------- Format ---------- */
 const usd=(v,dp)=>'$'+v.toLocaleString('ru-RU',{minimumFractionDigits:dp??(v<1?4:2),maximumFractionDigits:dp??(v<1?4:2)});
@@ -354,14 +419,65 @@ function go(v){
   haptic('soft'); render(); window.scrollTo({top:0});
 }
 
+/* ---------- Real prices (CoinGecko, public API, no key) ---------- */
+const CG={TON:'the-open-network',USDT:'tether',BTC:'bitcoin',ETH:'ethereum',NOT:'notcoin',TRX:'tron'};
+let pricesLive=false;
+async function fetchPrices(){
+  try{
+    const ids=Object.values(CG).join(',');
+    const r=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    if(!r.ok) throw 0;
+    const j=await r.json();
+    let any=false;
+    MARKET.forEach(a=>{
+      const d=j[CG[a.sym]];
+      if(d && d.usd!=null){ a.price=d.usd; if(d.usd_24h_change!=null) a.chg=d.usd_24h_change; a.hist.push(a.price); if(a.hist.length>60) a.hist.shift(); any=true; }
+    });
+    if(any){ pricesLive=true; const f=document.getElementById('footnote'); if(f && !wsLive) f.textContent='Цены — CoinGecko'; render(); if(openKind==='asset') updateAssetLive(); }
+  }catch(e){
+    const f=document.getElementById('footnote'); if(f && !pricesLive) f.textContent='Не удалось загрузить цены — показаны демо-значения';
+  }
+}
+
+/* ---------- Live stream (Binance WebSocket, no key) ---------- */
+const BNB={TON:'tonusdt',BTC:'btcusdt',ETH:'ethusdt',TRX:'trxusdt',NOT:'notusdt'};
+let ws=null, wsLive=false, rPending=false;
+function scheduleRender(){ if(rPending) return; rPending=true; requestAnimationFrame(()=>{ rPending=false; render(); if(openKind==='asset') updateAssetLive(); }); }
+function startWs(){
+  try{
+    const streams=Object.values(BNB).map(s=>s+'@ticker').join('/');
+    ws=new WebSocket('wss://stream.binance.com:9443/stream?streams='+streams);
+    ws.onmessage=ev=>{
+      try{
+        const m=JSON.parse(ev.data).data; if(!m||!m.s) return;
+        const pair=m.s.toLowerCase(), sym=Object.keys(BNB).find(k=>BNB[k]===pair); if(!sym) return;
+        const a=A(sym); if(!a) return;
+        a.price=parseFloat(m.c); if(m.P!=null) a.chg=parseFloat(m.P);
+        a.hist.push(a.price); if(a.hist.length>120) a.hist.shift();
+        wsLive=true; pricesLive=true;
+        const f=document.getElementById('footnote'); if(f && f.textContent!=='Реальное время · Binance') f.textContent='Реальное время · Binance';
+        scheduleRender();
+      }catch(e){}
+    };
+    ws.onclose=()=>{ wsLive=false; setTimeout(startWs,4000); };
+    ws.onerror=()=>{ try{ ws.close() }catch(e){} };
+  }catch(e){}
+}
+
 setInterval(()=>{
-  MARKET.forEach(a=>{
-    if(a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
-    else { const r=(Math.random()-0.49)*0.006; a.price*=1+r; a.chg+=r*100; }
-    a.hist.push(a.price); if(a.hist.length>60) a.hist.shift();
-  });
-  render(); if(openKind==='asset') updateAssetLive();
+  if(!pricesLive){
+    MARKET.forEach(a=>{
+      if(a.sym==='USDT') a.price=1+(Math.random()-0.5)*0.0006;
+      else { const r=(Math.random()-0.49)*0.006; a.price*=1+r; a.chg+=r*100; }
+      a.hist.push(a.price); if(a.hist.length>60) a.hist.shift();
+    });
+    render(); if(openKind==='asset') updateAssetLive();
+  } else if(!wsLive){ render(); if(openKind==='asset') updateAssetLive(); }
 }, 2500);
+fetchPrices();
+startWs();
+setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
+setInterval(()=>{ const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w); }, 30000);
 
 /* ---------- Sheet ---------- */
 const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim'), body=document.getElementById('sheetBody');
@@ -423,7 +539,7 @@ function sendView(){
   check();
 }
 
-const NETNAME={TON:'TON',BTC:'Bitcoin',ETH:'Ethereum'};
+const NETNAME={TON:'TON',BTC:'Bitcoin',ETH:'Ethereum',TRON:'TRON'};
 function receiveView(){
   const s=ctx.sym||'TON'; ctx.sym=s;
   const a=A(s), key=a.net, address=W().addr[key];
@@ -500,13 +616,15 @@ function walletsView(){
       <button class="mini" data-wedit="${w.id}" aria-label="Изменить"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></button>
     </div>`;
   }).join('')+`
-    <div class="wact"><button class="ghost" id="lnk">Привязать адрес</button><button class="primary" style="margin:0" id="cre">Создать кошелёк</button></div>
-    <p class="demo">Демо: адреса и балансы ненастоящие.</p>`;
-  body.querySelectorAll('[data-wsel]').forEach(b=>b.onclick=()=>{ S.active=b.dataset.wsel; save(); haptic(); render(); walletsView(); });
+    <button class="primary" id="tconn" style="margin-bottom:8px">Подключить кошелёк (TON Connect)</button>
+    <div class="wact"><button class="ghost" id="lnk">Привязать адрес</button><button class="ghost" id="cre">Создать кошелёк</button></div>
+    <p class="demo">Подключённый или привязанный адрес показывает баланс в реальном времени.</p>`;
+  body.querySelectorAll('[data-wsel]').forEach(b=>b.onclick=()=>{ S.active=b.dataset.wsel; save(); haptic(); render(); walletsView(); if(W().watch) refreshWallet(W()); });
   body.querySelectorAll('[data-wcopy]').forEach(b=>b.onclick=()=>{ if(b.dataset.wcopy) copy(b.dataset.wcopy); });
   body.querySelectorAll('[data-wedit]').forEach(b=>b.onclick=()=>{ haptic('soft'); editView(b.dataset.wedit); });
   body.querySelector('#cre').onclick=()=>{ ctx={}; haptic(); createView(); };
   body.querySelector('#lnk').onclick=()=>{ ctx={}; haptic(); linkView(); };
+  body.querySelector('#tconn').onclick=()=>{ haptic(); tonConnect(); };
 }
 function editView(id){
   openKind='wallets';
@@ -527,7 +645,7 @@ function createView(){
   const n=ctx.cname!==undefined?ctx.cname:('Кошелёк '+(S.wallets.length+1));
   body.innerHTML=head('Создать кошелёк')+`
     <div class="field"><label>Название</label><input id="cn" value="${esc(n)}" maxlength="24"></div>
-    <p class="demo" style="text-align:left;margin:2px 2px 14px">Будет сгенерирован новый адрес и резервная фраза. Это демонстрация — реальные средства сюда не поступят.</p>
+    <p class="demo" style="text-align:left;margin:2px 2px 14px">Адрес и фраза создаются локально в приложении и не связаны с существующим кошельком — не отправляйте на этот адрес реальные средства.</p>
     <button class="primary" id="go">Создать</button>
     <button class="ghost" id="bk" style="margin-top:8px">Назад</button>`;
   body.querySelector('#cn').oninput=e=>ctx.cname=e.target.value;
@@ -572,11 +690,12 @@ function linkView(){
   body.querySelector('#bk').onclick=()=>walletsView();
   gob.onclick=()=>{
     const v=la.value.trim();
-    const net=v.startsWith('0x')?'ETH':(v.startsWith('bc1')||/^[13]/.test(v))?'BTC':'TON';
+    const net=v.startsWith('0x')?'ETH':/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(v)?'TRON':(v.startsWith('bc1')||/^[13]/.test(v))?'BTC':'TON';
     const addr={}; addr[net]=v;
     const w={id:newId(),name:(ln.value.trim()||'Отслеживаемый'),watch:true,addr,bal:{},history:[]};
     S.wallets.push(w); S.active=w.id; save(); notify(); render();
     toast('Адрес привязан'); walletsView();
+    if(net==='TON'||net==='TRON') refreshWallet(w);
   };
   check();
 }
@@ -603,10 +722,30 @@ function assetView(){
     ${watch?'<p class="demo">Привязанный адрес — только просмотр.</p>':''}`;
   body.querySelectorAll('[data-range]').forEach(b=>b.onclick=()=>{ ctx.range=b.dataset.range; haptic('soft'); assetView(); });
   body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openSheet(b.dataset.go,{sym:a.sym}));
-  updateAssetLive();
+  ctx.realSeries=null; updateAssetLive(); loadAssetChart();
+}
+const KL={'1Д':['15m',96],'1Н':['1h',168],'1М':['4h',180],'1Г':['1d',365]};
+async function fetchKlines(sym,range){
+  if(sym==='USDT' || !BNB[sym]) return null;
+  try{
+    const [iv,lim]=KL[range];
+    const r=await fetch(`https://api.binance.com/api/v3/klines?symbol=${BNB[sym].toUpperCase()}&interval=${iv}&limit=${lim}`);
+    if(!r.ok) return null;
+    const j=await r.json();
+    const closes=j.map(k=>parseFloat(k[4])).filter(x=>!isNaN(x));
+    return closes.length>1?closes:null;
+  }catch(e){ return null; }
+}
+async function loadAssetChart(){
+  const sym=ctx.sym, range=ctx.range;
+  const s=await fetchKlines(sym,range);
+  if(openKind==='asset' && ctx.sym===sym && ctx.range===range){ ctx.realSeries=s; updateAssetLive(); }
 }
 function updateAssetLive(){
-  const a=A(ctx.sym), s=series(a,ctx.range), ch=(s[s.length-1]/s[0]-1)*100, up=ch>=0;
+  const a=A(ctx.sym);
+  let s=(ctx.realSeries&&ctx.realSeries.length)?ctx.realSeries.slice():series(a,ctx.range);
+  if(a.sym!=='USDT') s[s.length-1]=a.price;
+  const ch=(s[s.length-1]/s[0]-1)*100, up=ch>=0;
   const hex=up?'#1FD187':'#FF5666', p=path(s,400,180,10);
   body.querySelector('#ap').textContent=usd(a.price);
   const c=body.querySelector('#ac'); c.className='chg num '+(up?'up':'down'); c.textContent=pct(ch)+' за '+({'1Д':'день','1Н':'неделю','1М':'месяц','1Г':'год'})[ctx.range];
