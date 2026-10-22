@@ -1086,7 +1086,7 @@ document.getElementById('keypad').addEventListener('click',e=>{
 /* ---------- Admin panel (bot owner) ---------- */
 const ADMIN_USERNAME='S1monov_A';
 // Адрес вашего бэкенда (server.js). Пусто = не настроен.
-const API_BASE=''; // напр. 'https://your-backend.example.com'
+const API_BASE='https://web3app-pnyh.onrender.com'; // напр. 'https://your-backend.example.com'
 const tgUser=()=>{ try{ return (tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)||null }catch(e){ return null } };
 const isAdmin=()=>{ const u=tgUser(); return !!(u && u.username && u.username.toLowerCase()===ADMIN_USERNAME.toLowerCase()); };
 async function apiRegister(){
