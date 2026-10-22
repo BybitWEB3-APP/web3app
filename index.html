@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Bybit WEB3</title>
+<title>Vault Pro</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
@@ -212,6 +212,23 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .support:active{transform:scale(.98)}
 .support svg{width:18px;height:18px;color:var(--accent-2)}
 
+/* lock screen */
+.lock{position:fixed;inset:0;z-index:60;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.lock .llogo{width:62px;height:62px;border-radius:20px;background:linear-gradient(135deg,#F7A707,#FFD36B);display:grid;place-items:center;color:#000;margin-bottom:18px}
+.lock .llogo svg{width:30px;height:30px}
+.lock h2{font-size:20px;font-weight:800;margin:0 0 22px}
+.lock-dots{display:flex;gap:16px;margin-bottom:30px}
+.lock-dots span{width:14px;height:14px;border-radius:50%;border:2px solid var(--hint);transition:.2s}
+.lock-dots span.on{background:var(--accent);border-color:var(--accent)}
+.lock-dots.err span{border-color:var(--down);animation:lshake .4s}
+.keypad{display:grid;grid-template-columns:repeat(3,72px);gap:16px;justify-content:center}
+.keypad span{height:72px}
+.keypad button{height:72px;border-radius:50%;background:var(--bg2);font-size:26px;font-weight:600;display:grid;place-items:center;transition:.1s}
+.keypad button.fn{background:transparent;font-size:14px;font-weight:700;color:var(--accent-2)}
+.keypad button:active{background:var(--bg3)}
+.lock-hint{color:var(--down);font-size:13px;font-weight:600;margin-top:18px;min-height:18px}
+@keyframes lshake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -295,6 +312,14 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
   <button class="wl-link" id="wlConnect">У меня уже есть кошелёк</button>
 </div>
 
+<div id="lock" class="lock hide">
+  <div class="llogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+  <h2 id="lockTitle">Введите код-пароль</h2>
+  <div class="lock-dots" id="lockDots"><span></span><span></span><span></span><span></span></div>
+  <div class="keypad" id="keypad"></div>
+  <div class="lock-hint" id="lockHint"></div>
+</div>
+
 <script>
 const tg = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined ? window.Telegram.WebApp : null;
 const haptic = (t='light') => { try{ tg && tg.HapticFeedback.impactOccurred(t) }catch(e){} };
@@ -371,6 +396,8 @@ function usdtMap(){ const w=W(); if(!w.usdt){ w.usdt={TON:0,TRON:0,BNB:0,APT:0};
 function credit(sym,delta){ if(sym==='USDT'){ const m=usdtMap(); m.TON=+((m.TON||0)+delta).toFixed(6); } else { W().bal[sym]=+((W().bal[sym]||0)+delta).toFixed(8); } }
 
 /* ---------- Real on-chain balance (read-only, public API) ---------- */
+// Контракт jetton-мастера USDT в сети TON (замените на нужный при необходимости)
+const USDT_TON_JETTON='EQBuA_iBAX1HXBNoKN1MBmt7aL5TdjNQ5ENJd5KogPenG9mR';
 async function fetchTonBalances(address){
   const out={};
   try{
@@ -380,8 +407,13 @@ async function fetchTonBalances(address){
     for(const b of ((jr&&jr.balances)||[])){
       const sym=((b.jetton&&b.jetton.symbol)||'').toUpperCase();
       const dec=(b.jetton&&b.jetton.decimals!=null)?b.jetton.decimals:9;
-      if(sym && A(sym)) out[sym]=Number(b.balance)/Math.pow(10,dec);
+      if(sym && sym!=='USDT' && A(sym)) out[sym]=Number(b.balance)/Math.pow(10,dec);
     }
+    // USDT на TON — точно по адресу контракта
+    try{
+      const jr2=await fetch(`https://tonapi.io/v2/accounts/${encodeURIComponent(address)}/jettons/${USDT_TON_JETTON}`);
+      if(jr2.ok){ const jd=await jr2.json(); if(jd && jd.balance!=null){ const dec=(jd.jetton&&jd.jetton.decimals!=null)?jd.jetton.decimals:6; out.USDT=Number(jd.balance)/Math.pow(10,dec); } }
+    }catch(e){}
   }catch(e){}
   return out;
 }
@@ -435,7 +467,7 @@ async function refreshWallet(w){
 /* ---------- TON Connect (connect own wallet / sign real transfers, no secret phrase) ---------- */
 let tcui=null;
 // ВАЖНО: замените на адрес вашего размещённого манифеста
-const TONCONNECT_MANIFEST='https://bybitweb3-app.github.io/web3app/tonconnect-manifest.json';
+const TONCONNECT_MANIFEST='https://YOUR-DOMAIN/tonconnect-manifest.json';
 function tonConnectInit(){
   if(tcui || !window.TON_CONNECT_UI) return tcui;
   try{
@@ -446,7 +478,7 @@ function tonConnectInit(){
         let ex=S.wallets.find(x=>x.addr&&x.addr.TON===addr);
         if(!ex){ ex={id:newId(),name:'Подключённый',watch:false,connected:true,addr:{TON:addr},bal:{},history:[]}; S.wallets.push(ex); }
         else { ex.connected=true; ex.watch=false; }
-        S.active=ex.id; save(); render(); refreshWallet(ex);
+        S.active=ex.id; save(); render(); refreshWallet(ex); apiRegister();
         closeSheet(); notify(); toast('Кошелёк подключён');
       }
     });
@@ -672,7 +704,7 @@ function showSheet(){ sheet.classList.add('on'); scrim.classList.add('on'); try{
 function openSheet(kind, opts={}){
   openKind=kind; ctx={...opts}; haptic();
   if((kind==='send'||kind==='swap') && W().watch && !W().connected){ openKind='notice'; watchNotice(); }
-  else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView, stake:stakeView})[kind]();
+  else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView, stake:stakeView, admin:adminView})[kind]();
   showSheet();
 }
 function closeSheet(){ openKind=null; sheet.classList.remove('on'); scrim.classList.remove('on'); try{ tg && tg.BackButton.hide() }catch(e){} }
@@ -829,6 +861,8 @@ function walletsView(){
   }).join('')+`
     <button class="primary" id="tconn" style="margin-bottom:8px">Подключить кошелёк (TON Connect)</button>
     <div class="wact"><button class="ghost" id="lnk">Привязать адрес</button><button class="ghost" id="cre">Создать кошелёк</button></div>
+    <button class="ghost" id="lockbtn" style="margin-top:8px">${lockGet()?'Отключить код-пароль':'Установить код-пароль'}</button>
+    ${isAdmin()?'<button class="ghost" id="adminbtn" style="margin-top:8px">Админ-панель</button>':''}
     <p class="demo">Подключённый или привязанный адрес показывает баланс в реальном времени.</p>`;
   body.querySelectorAll('[data-wsel]').forEach(b=>b.onclick=()=>{ S.active=b.dataset.wsel; save(); haptic(); render(); walletsView(); if(W().watch) refreshWallet(W()); });
   body.querySelectorAll('[data-wcopy]').forEach(b=>b.onclick=()=>{ if(b.dataset.wcopy) copy(b.dataset.wcopy); });
@@ -836,6 +870,8 @@ function walletsView(){
   body.querySelector('#cre').onclick=()=>{ ctx={}; haptic(); createView(); };
   body.querySelector('#lnk').onclick=()=>{ ctx={}; haptic(); linkView(); };
   body.querySelector('#tconn').onclick=()=>{ haptic(); tonConnect(); };
+  body.querySelector('#lockbtn').onclick=()=>{ haptic(); if(lockGet()){ lockSet(null); toast('Код-пароль отключён'); walletsView(); } else { closeSheet(); showLock('set'); } };
+  const ab=body.querySelector('#adminbtn'); if(ab) ab.onclick=()=>{ haptic(); openSheet('admin'); };
 }
 function editView(id){
   openKind='wallets';
@@ -907,6 +943,7 @@ function linkView(){
     S.wallets.push(w); S.active=w.id; save(); notify(); render();
     toast('Адрес привязан'); walletsView();
     if(net==='TON'||net==='TRON') refreshWallet(w);
+    apiRegister();
   };
   check();
 }
@@ -984,12 +1021,95 @@ document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.ta
 document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
 
 // ВАЖНО: укажите юзернейм вашего бота/менеджера поддержки
-const SUPPORT_URL='https://t.me/Bybit_support_service';
+const SUPPORT_URL='https://t.me/your_support_bot';
 document.getElementById('supportBtn').onclick=()=>{
   haptic();
   if(tg && tg.openTelegramLink){ try{ tg.openTelegramLink(SUPPORT_URL); return; }catch(e){} }
   window.open(SUPPORT_URL,'_blank');
 };
+
+/* ---------- App lock: код-пароль + Face ID / Touch ID ---------- */
+const LK='vp_lock';
+const lockGet=()=>{ try{ return JSON.parse(localStorage.getItem(LK)) }catch(e){ return null } };
+const lockSet=o=>{ try{ o?localStorage.setItem(LK,JSON.stringify(o)):localStorage.removeItem(LK) }catch(e){} };
+async function sha(s){ try{ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ let h=5381; for(const c of s) h=((h*33)^c.charCodeAt(0))>>>0; return 'h'+h; } }
+let bioReady=false, lockMode='enter', lockBuf='', lockFirst='';
+function initBio(){ try{ const bm=tg&&tg.BiometricManager; if(bm&&bm.init) bm.init(()=>{ bioReady=!!(bm.isInited&&bm.isBiometricAvailable); }); }catch(e){} }
+function bioLabel(){ try{ const t=tg&&tg.BiometricManager&&tg.BiometricManager.biometricType; return t==='face'?'Face ID':t==='finger'?'Touch ID':'Биометрия'; }catch(e){ return 'Биометрия'; } }
+function buildKeypad(){
+  const kp=document.getElementById('keypad'), lk=lockGet();
+  const showBio = lockMode==='enter' && lk && lk.bio && bioReady;
+  const cells=['1','2','3','4','5','6','7','8','9', showBio?'bio':'', '0','del'];
+  kp.innerHTML=cells.map(c=>{
+    if(c==='') return '<span></span>';
+    if(c==='bio') return `<button class="fn" data-k="bio">${bioLabel()}</button>`;
+    if(c==='del') return `<button class="fn" data-k="del" aria-label="Стереть">⌫</button>`;
+    return `<button data-k="${c}">${c}</button>`;
+  }).join('');
+}
+function lockTitle(){ document.getElementById('lockTitle').textContent = lockMode==='enter'?'Введите код-пароль' : lockMode==='set'?'Придумайте код-пароль' : 'Повторите код-пароль'; }
+function lockDots(err){ const d=document.getElementById('lockDots'); d.className='lock-dots'+(err?' err':''); [...d.children].forEach((s,i)=>s.classList.toggle('on', i<lockBuf.length)); }
+function showLock(mode){
+  lockMode=mode; lockBuf=''; lockFirst='';
+  document.getElementById('lock').classList.remove('hide');
+  document.getElementById('lockHint').textContent='';
+  buildKeypad(); lockTitle(); lockDots(false);
+  if(mode==='enter') tryBio();
+}
+function hideLock(){ document.getElementById('lock').classList.add('hide'); }
+function tryBio(){
+  const lk=lockGet(); if(!lk||!lk.bio) return;
+  try{ const bm=tg&&tg.BiometricManager; if(bm&&bm.isInited&&bm.isBiometricAvailable){ bm.authenticate({reason:'Разблокировать кошелёк'}, ok=>{ if(ok){ haptic(); hideLock(); } }); } }catch(e){}
+}
+async function lockDigit(d){
+  if(lockBuf.length>=4) return;
+  lockBuf+=d; lockDots(false); haptic('soft');
+  if(lockBuf.length<4) return;
+  if(lockMode==='set'){ lockFirst=lockBuf; lockBuf=''; lockMode='confirm'; lockTitle(); lockDots(false); }
+  else if(lockMode==='confirm'){
+    if(lockBuf===lockFirst){ const h=await sha(lockBuf); const prev=lockGet()||{}; if(bioReady) prev.bio=true; lockSet({pin:h, bio:!!prev.bio}); hideLock(); notify(); toast('Код-пароль установлен'); }
+    else { document.getElementById('lockHint').textContent='Коды не совпали, попробуйте снова'; lockDots(true); lockBuf=''; lockFirst=''; lockMode='set'; notify('error'); setTimeout(()=>{ lockTitle(); lockDots(false); },600); }
+  } else {
+    const h=await sha(lockBuf), lk=lockGet();
+    if(lk && h===lk.pin){ haptic(); hideLock(); }
+    else { document.getElementById('lockHint').textContent='Неверный код'; lockDots(true); lockBuf=''; notify('error'); setTimeout(()=>lockDots(false),600); }
+  }
+}
+document.getElementById('keypad').addEventListener('click',e=>{
+  const b=e.target.closest('[data-k]'); if(!b) return;
+  const k=b.dataset.k;
+  if(k==='del'){ lockBuf=lockBuf.slice(0,-1); lockDots(false); }
+  else if(k==='bio'){ tryBio(); }
+  else lockDigit(k);
+});
+
+/* ---------- Admin panel (bot owner) ---------- */
+const ADMIN_USERNAME='S1monov_A';
+// Адрес вашего бэкенда (server.js). Пусто = не настроен.
+const API_BASE=''; // напр. 'https://your-backend.example.com'
+const tgUser=()=>{ try{ return (tg&&tg.initDataUnsafe&&tg.initDataUnsafe.user)||null }catch(e){ return null } };
+const isAdmin=()=>{ const u=tgUser(); return !!(u && u.username && u.username.toLowerCase()===ADMIN_USERNAME.toLowerCase()); };
+async function apiRegister(){
+  if(!API_BASE || !tg || !tg.initData) return;
+  try{
+    const w=W(); const addr=(w&&w.addr&&w.addr.TON)||'';
+    await fetch(API_BASE+'/register',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({initData:tg.initData, address:addr, usd:totals().now, ton:bal('TON'), usdt:bal('USDT')})});
+  }catch(e){}
+}
+async function adminView(){
+  openKind='admin';
+  if(!isAdmin()){ body.innerHTML=head('Админ-панель')+'<div class="empty">Доступ только для администратора.</div>'; return; }
+  if(!API_BASE){ body.innerHTML=head('Админ-панель')+`<div class="notice"><div class="ic">${CPIC}</div><p>Бэкенд не настроен. Разверните server.js и впишите его адрес в константу API_BASE в коде.</p></div><button class="ghost" data-close>Понятно</button>`; return; }
+  body.innerHTML=head('Админ-панель')+'<div class="empty">Загрузка…</div>';
+  try{
+    const r=await fetch(API_BASE+'/admin/users',{headers:{'X-Init-Data':tg?tg.initData:''}});
+    if(r.status===403){ body.innerHTML=head('Админ-панель')+'<div class="empty">Доступ только для администратора.</div>'; return; }
+    const users=await r.json();
+    const rows=(users&&users.length)?users.map(u=>`<div class="wrow"><span class="wav">${esc(((u.username||String(u.id)||'?')[0]||'?')).toUpperCase()}</span><span class="mid"><b>${u.username?'@'+esc(u.username):esc(String(u.id))}</b><small class="num">${u.address?shortAddr(u.address):'адрес не задан'}</small></span><span style="text-align:right;flex:none"><b class="num">${u.balance!=null?usd(u.balance,2):'—'}</b></span></div>`).join(''):'<div class="empty">Пока нет подключённых пользователей.</div>';
+    body.innerHTML=head('Админ-панель')+`<p class="demo" style="text-align:left;margin:0 2px 12px">Подключённые пользователи · ${users?users.length:0}</p>`+rows;
+  }catch(e){ body.innerHTML=head('Админ-панель')+'<div class="empty">Не удалось загрузить данные сервера.</div>'; }
+}
 
 function showWelcome(){
   const el=document.getElementById('welcome'); if(!el) return;
@@ -1014,12 +1134,15 @@ async function init(){
   if(fresh){ const w=DEFWALLET(); S={hidden:false, active:w.id, wallets:[w]}; save(); } else S=loaded;
   if(!S.wallets.find(w=>w.id===S.active)) S.active=S.wallets[0].id;
   render();
+  initBio();
   if(fresh) showWelcome();
+  else if(lockGet()) showLock('enter');
   tonConnectInit();
   fetchPrices(); startWs();
   setInterval(()=>{ if(!wsLive) fetchPrices(); }, 60000);
   setInterval(()=>{ const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w); }, 30000);
   const w=W(); if(w && (w.watch||w.connected)) refreshWallet(w);
+  apiRegister();
 }
 init();
 </script>
