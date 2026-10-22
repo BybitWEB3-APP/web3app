@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>Bybit WEB3</title>
+<title>Vault Pro</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
@@ -365,7 +365,7 @@ const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 const genAddrSet=()=>({ TON:'UQ'+rstr(B64,46), BTC:'bc1q'+rstr('023456789acdefghjklmnpqrstuvwxyz',38), ETH:'0x'+rstr('0123456789abcdef',40), BNB:'0x'+rstr('0123456789abcdef',40), APT:'0x'+rstr('0123456789abcdef',64), TRON:'T'+rstr(B58,33) });
 const WORDS='apple orbit cable delta ember frost grove hazel input jolly kiosk lunar maple noble ocean pearl quartz raven solar tiger umbra vivid wafer xenon yield zebra amber brisk cedar drift eagle flint glide hollow ivory jewel karma lemon mango nectar opal prism quill ripple'.split(' ');
 const genPhrase=()=>Array.from({length:12},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join(' ');
-/* У каждого пользователя — свой, уникально сгенерированный кошелёк (не общий адрес) */
+/* У каждого пользователя — свой, уникально сгенерированный кошелёк (не общий демо-адрес) */
 const DEFWALLET=()=>({ id:newId(), name:'Мой кошелёк', watch:false, addr:genAddrSet(), bal:{}, history:[] });
 
 /* Хранилище: Telegram CloudStorage (отдельно для каждого юзера, синхрон между устройствами),
@@ -467,7 +467,7 @@ async function refreshWallet(w){
 /* ---------- TON Connect (connect own wallet / sign real transfers, no secret phrase) ---------- */
 let tcui=null;
 // ВАЖНО: замените на адрес вашего размещённого манифеста
-const TONCONNECT_MANIFEST='https://bybitweb3-app.github.io/web3app/tonconnect-manifest.json';
+const TONCONNECT_MANIFEST='https://YOUR-DOMAIN/tonconnect-manifest.json';
 function tonConnectInit(){
   if(tcui || !window.TON_CONNECT_UI) return tcui;
   try{
@@ -580,19 +580,20 @@ const EARN_APY={TON:5.2, USDT:9, BTC:3.1, ETH:4.35, NOT:12.5, TRX:6.4};
 const stakeAccrued=st=>{ const days=(Date.now()-st.start)/86400000; return st.amt*(st.apy/100)*(days/365); };
 function renderEarn(){
   const w=W();
+  const banner=`<div class="earnbanner">Демо-раздел: проценты показаны для примера, средства не вносятся и не начисляются по-настоящему. В реальном продукте доход должен обеспечиваться реальным источником (стейкинг, ликвидность, кредитование) и сопровождаться раскрытием рисков.</div>`;
   if(w.watch || w.connected){
-    return `<h1 class="earnhead">Earn</h1>${banner}<div class="empty">Начисления недоступны для привязанного или подключённого пустого кошелька. Переключитесь на демо-кошелёк.</div>`;
+    return `<h1 class="earnhead">Earn</h1>${banner}<div class="empty">Демо-начисления недоступны для привязанного или подключённого кошелька, чтобы не затрагивать реальный баланс. Переключитесь на демо-кошелёк.</div>`;
   }
   let active='';
   if(w.stakes && w.stakes.length){
-    active='<div class="colhead"><span>Мои вклады</span></div>'+w.stakes.map(st=>{
+    active='<div class="colhead"><span>Мои вклады (демо)</span></div>'+w.stakes.map(st=>{
       const a=A(st.sym), acc=stakeAccrued(st);
       return `<div class="stakecard"><div class="r"><span style="display:flex;align-items:center;gap:8px">${coin(a)}<b>${amt(st.amt,a)}</b></span><span class="up num">+${amt(acc,a)}</span></div>
         <div class="r"><small style="color:var(--hint)">${String(st.apy).replace('.',',')}% годовых · гибкий вывод</small><small style="color:var(--hint)">начисляется</small></div>
         <button class="claim rdy" data-claim="${st.id}">Забрать</button></div>`;
     }).join('');
   }
-  const grid='<div class="colhead"><span>Продукты</span></div><div class="earngrid">'+MARKET.filter(a=>EARN_APY[a.sym]).map(a=>`<button class="etile" data-coin="${a.sym}"><span class="ribbon">bonus</span>${coin(a)}<b>${a.name}</b><small>${String(EARN_APY[a.sym]).replace('.',',')}% годовых</small><span class="sub">гибкий вывод</span></button>`).join('')+'</div>';
+  const grid='<div class="colhead"><span>Продукты (демо)</span></div><div class="earngrid">'+MARKET.filter(a=>EARN_APY[a.sym]).map(a=>`<button class="etile" data-coin="${a.sym}"><span class="ribbon">bonus</span>${coin(a)}<b>${a.name}</b><small>${String(EARN_APY[a.sym]).replace('.',',')}% годовых</small><span class="sub">гибкий вывод</span></button>`).join('')+'</div>';
   return `<h1 class="earnhead">Earn</h1>${banner}${active}${grid}`;
 }
 function claimStake(id){
@@ -600,20 +601,20 @@ function claimStake(id){
   const total=st.amt+stakeAccrued(st);
   credit(st.sym, total);
   w.stakes=w.stakes.filter(x=>x.id!==id);
-  w.history.unshift({type:'in',sym:st.sym,amt:+total.toFixed(8),who:'Earn',t:Date.now()});
-  save(); render(); notify(); toast('Вклад закрыт');
+  w.history.unshift({type:'in',sym:st.sym,amt:+total.toFixed(8),who:'Earn (демо)',t:Date.now()});
+  save(); render(); notify(); toast('Вклад закрыт (демо)');
 }
 function stakeView(){
   const sym=ctx.coin, a=A(sym), apy=EARN_APY[sym], avail=bal(sym);
-  body.innerHTML=head('Вложить')+`
-    <div class="earnbanner" style="margin-top:0">Доход показан для примера, реальные средства не вносятся.</div>
+  body.innerHTML=head('Вложить (демо)')+`
+    <div class="earnbanner" style="margin-top:0">Демо: доход показан для примера, реальные средства не вносятся.</div>
     <div class="row" style="border:0;padding:4px 0 12px">${coin(a)}<span class="mid"><b>${a.name}</b><small class="num">${String(apy).replace('.',',')}% годовых · гибкий вывод</small></span></div>
     <div class="field"><label for="am">Сумма · доступно ${amt(avail,a)}</label>
       <div class="line"><input id="am" class="big num" inputmode="decimal" placeholder="0" value=""><button class="pill" id="max">Макс.</button></div></div>
     <div class="kv"><span>Ставка</span><b>${String(apy).replace('.',',')}% годовых</b></div>
-    <div class="kv"><span>≈ в месяц</span><b id="est" class="num up">0</b></div>
+    <div class="kv"><span>≈ в месяц (демо)</span><b id="est" class="num up">0</b></div>
     <div class="err" id="err"></div>
-    <button class="primary" id="go" disabled>Вложить</button>`;
+    <button class="primary" id="go" disabled>Вложить (демо)</button>`;
   const am=body.querySelector('#am'), gob=body.querySelector('#go'), err=body.querySelector('#err');
   const check=()=>{
     const v=parseFloat(am.value.replace(',','.'))||0;
@@ -628,9 +629,9 @@ function stakeView(){
     credit(sym,-v);
     const w=W(); if(!w.stakes) w.stakes=[];
     w.stakes.unshift({id:newId(),sym,amt:v,apy,start:Date.now()});
-    w.history.unshift({type:'out',sym,amt:v,who:'Earn,t:Date.now()});
+    w.history.unshift({type:'out',sym,amt:v,who:'Earn (демо)',t:Date.now()});
     save(); render(); notify();
-    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">${amt(v,a)}</h3><p>Вложено в продукт ${a.name}</p><button class="ghost" data-close>Готово</button></div>`;
+    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">${amt(v,a)}</h3><p>Вложено в демо-продукт ${a.name}</p><button class="ghost" data-close>Готово</button></div>`;
   };
   check();
 }
@@ -651,7 +652,7 @@ async function fetchPrices(){
     });
     if(any){ pricesLive=true; const f=document.getElementById('footnote'); if(f && !wsLive) f.textContent='Цены — CoinGecko'; render(); if(openKind==='asset') updateAssetLive(); }
   }catch(e){
-    const f=document.getElementById('footnote'); if(f && !pricesLive) f.textContent='Не удалось загрузить цены — показаны null значения';
+    const f=document.getElementById('footnote'); if(f && !pricesLive) f.textContent='Не удалось загрузить цены — показаны демо-значения';
   }
 }
 
@@ -906,7 +907,7 @@ function phraseView(){
   openKind='create';
   const words=ctx.phrase.split(' ');
   body.innerHTML=head('Резервная фраза')+`
-    <div class="warn">⚠️ Запишите эти 12 слов по порядку и храните офлайн. Никогда не вводите настоящую seed-фразу на сайтах и не показывайте её никому. Это сид-фраза.</div>
+    <div class="warn">⚠️ Запишите эти 12 слов по порядку и храните офлайн. Никогда не вводите настоящую seed-фразу на сайтах и не показывайте её никому. Это демо-фраза.</div>
     <div class="phrase">${words.map((w,i)=>`<span><i>${i+1}</i>${w}</span>`).join('')}</div>
     <div class="two"><button class="ghost" id="cp">Скопировать</button><button class="primary" style="margin:0" id="go">Я записал</button></div>`;
   body.querySelector('#cp').onclick=()=>copy(ctx.phrase);
