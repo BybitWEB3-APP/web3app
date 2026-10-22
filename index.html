@@ -166,23 +166,51 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 .hide{display:none!important}
 
 /* welcome / onboarding */
-.welcome{position:fixed;inset:0;z-index:50;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding:0 24px calc(34px + env(safe-area-inset-bottom,0px))}
-.wl-bg{position:absolute;inset:0;background:radial-gradient(120% 75% at 50% -5%, rgba(247,167,7,.30), transparent 62%);pointer-events:none}
-.wl-coins{position:absolute;inset:0;top:0;height:58%;pointer-events:none}
-.wl-coins .c{position:absolute;width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:16px;color:#fff;box-shadow:0 12px 34px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.14);animation:wlfloat 6s ease-in-out infinite}
-.wl-coins .c1{background:#0098EA;left:16%;top:20%;animation-delay:0s}
-.wl-coins .c2{background:#F7931A;right:14%;top:14%;width:62px;height:62px;animation-delay:-1.4s}
-.wl-coins .c3{background:#26A17B;left:26%;top:52%;width:46px;height:46px;animation-delay:-2.6s}
-.wl-coins .c4{background:#627EEA;right:20%;top:50%;animation-delay:-3.6s}
-.wl-coins .c5{background:#EF0027;left:46%;top:30%;width:44px;height:44px;animation-delay:-2s}
-.wl-card{position:relative;z-index:1;text-align:center;animation:wlup .6s cubic-bezier(.2,.8,.2,1)}
-.wl-logo{width:76px;height:76px;border-radius:24px;margin:0 auto 20px;background:linear-gradient(135deg,#F7A707,#FFD36B);display:grid;place-items:center;color:#000;box-shadow:0 14px 44px rgba(247,167,7,.42)}
-.wl-logo svg{width:40px;height:40px}
-.welcome h1{font-size:33px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px}
-.welcome p{color:var(--hint);font-size:15px;line-height:1.55;margin:0 auto 26px;max-width:330px}
-.wl-link{display:block;width:100%;margin-top:10px;color:var(--hint);font-weight:600;padding:12px}
-@keyframes wlfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-20px) rotate(4deg)}}
-@keyframes wlup{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.welcome{position:fixed;inset:0;z-index:50;max-width:480px;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;padding:calc(14px + env(safe-area-inset-top,0px)) 24px calc(26px + env(safe-area-inset-bottom,0px))}
+.wl-bg{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 2%, rgba(247,167,7,.26), transparent 60%);pointer-events:none}
+.wl-skip{position:relative;z-index:2;align-self:flex-end;color:var(--hint);font-weight:600;padding:6px 2px;font-size:14px}
+.wl-slides{position:relative;z-index:1;flex:1;display:flex;transition:transform .4s cubic-bezier(.2,.8,.2,1)}
+.wl-slide{min-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 4px}
+.wl-ill{width:118px;height:118px;border-radius:32px;display:grid;place-items:center;margin-bottom:28px;color:#000;animation:wlpop .5s cubic-bezier(.2,1.3,.4,1)}
+.wl-ill.i1{background:linear-gradient(135deg,#F7A707,#FFD36B);box-shadow:0 18px 50px rgba(247,167,7,.32)}
+.wl-ill.i2{background:linear-gradient(135deg,#1FD187,#9BEBCC);box-shadow:0 18px 50px rgba(31,209,135,.3)}
+.wl-ill.i3{background:linear-gradient(135deg,#5AB8F5,#BEE3FF);box-shadow:0 18px 50px rgba(90,184,245,.3)}
+.wl-ill svg{width:58px;height:58px}
+.wl-slide h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:0 0 12px}
+.wl-slide p{color:var(--hint);font-size:15px;line-height:1.55;max-width:320px;margin:0}
+.wl-dots{display:flex;gap:7px;justify-content:center;margin:20px 0 16px;z-index:1}
+.wl-dots span{width:7px;height:7px;border-radius:50%;background:var(--bg3);transition:.3s;cursor:pointer}
+.wl-dots span.on{background:var(--accent);width:22px;border-radius:4px}
+.wl-link{display:block;width:100%;margin-top:10px;color:var(--hint);font-weight:600;padding:11px}
+@keyframes wlpop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+/* earn */
+.earnbanner{background:var(--down-bg);border:1px solid rgba(255,86,102,.3);color:#FF8A96;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.45;margin:2px 0 14px}
+.earnhead{font-size:24px;font-weight:800;letter-spacing:-.01em;margin:6px 0 10px}
+.plan{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:var(--bg2);border:1px solid var(--line);margin-bottom:8px;width:100%;text-align:left}
+.plan .mid{flex:1;min-width:0}
+.plan .mid b{display:block;font-size:15px;font-weight:700}
+.plan .mid small{font-size:12px;color:var(--hint)}
+.plan .apy{text-align:right;flex:none}
+.plan .apy b{display:block;font-size:20px;font-weight:800;color:var(--up)}
+.plan .apy small{font-size:11px;color:var(--hint)}
+.stakecard{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:8px}
+.stakecard .r{display:flex;justify-content:space-between;align-items:center;font-size:14px;margin:2px 0}
+.stakecard .r b{font-weight:700}
+.progress{height:6px;border-radius:3px;background:var(--bg3);overflow:hidden;margin:10px 0 8px}
+.progress i{display:block;height:100%;background:var(--accent);transition:width .4s}
+.claim{width:100%;border-radius:12px;padding:11px;font-weight:700;font-size:14px;margin-top:8px;background:var(--bg3)}
+.claim.rdy{background:var(--up);color:#000}
+.earngrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:2px}
+.etile{position:relative;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:16px 12px 14px;text-align:center;overflow:hidden}
+.etile .coin{width:48px;height:48px;font-size:15px;margin:0 auto 10px}
+.etile b{display:block;font-size:15px;font-weight:700;margin-bottom:4px}
+.etile small{display:block;font-size:14px;font-weight:800;color:var(--up)}
+.etile .sub{display:block;font-size:11px;color:var(--hint);font-weight:500;margin-top:3px}
+.ribbon{position:absolute;top:13px;right:-30px;transform:rotate(45deg);background:#2AABEE;color:#fff;font-size:9px;font-weight:800;letter-spacing:.6px;padding:3px 34px;text-transform:uppercase}
+.support{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:14px auto 0;padding:13px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);color:var(--text);font-weight:600;font-size:14px;transition:transform .12s}
+.support:active{transform:scale(.98)}
+.support svg{width:18px;height:18px;color:var(--accent-2)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -228,12 +256,13 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 
   <div id="list"></div>
   <p class="demo" id="footnote">Цены загружаются…</p>
+  <button class="support" id="supportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><path d="M4 14a2 2 0 0 1 2-2h1v5H6a2 2 0 0 1-2-2zM20 14a2 2 0 0 0-2-2h-1v5h1a2 2 0 0 0 2-2z"/><path d="M18 17v1a3 3 0 0 1-3 3h-3"/></svg>Поддержка</button>
 </div>
 
 <nav class="nav"><div class="nav-in">
   <button data-nav="home" aria-current="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="14" rx="3"/><path d="M3 10h18M16 15h2"/><path d="M6 6V5a2 2 0 0 1 2-2h10"/></svg>Кошелёк</button>
   <button data-nav="market"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19h16M7 15l4-5 3 3 5-6"/></svg>Рынок</button>
-  <button data-open="swap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>Обмен</button>
+  <button data-nav="earn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 15l10-10M8 7h.01M16 17h.01"/><circle cx="12" cy="12" r="9"/></svg>Earn</button>
   <button data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>История</button>
 </div></nav>
 
@@ -243,16 +272,27 @@ h1.page{font-size:24px;font-weight:800;margin:6px 0 4px;letter-spacing:-.01em}
 
 <div id="welcome" class="welcome hide">
   <div class="wl-bg"></div>
-  <div class="wl-coins">
-    <span class="c c1">TON</span><span class="c c2">₿</span><span class="c c3">$</span><span class="c c4">Ξ</span><span class="c c5">T</span>
+  <button class="wl-skip" id="wlSkip">Пропустить</button>
+  <div class="wl-slides" id="wlTrack">
+    <div class="wl-slide">
+      <div class="wl-ill i1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 14h2"/><path d="M6 6V5a2 2 0 0 1 2-2h9"/></svg></div>
+      <h1>Храните</h1>
+      <p>TON, USDT, BTC, ETH и другие монеты — в одном кошельке прямо внутри Telegram.</p>
+    </div>
+    <div class="wl-slide">
+      <div class="wl-ill i2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16"/><path d="M4 15l4-5 3 3 5-7"/><circle cx="19" cy="6" r="1.4" fill="currentColor"/></svg></div>
+      <h1>Отслеживайте</h1>
+      <p>Реальные цены и баланс обновляются в реальном времени, с графиком по каждой монете.</p>
+    </div>
+    <div class="wl-slide">
+      <div class="wl-ill i3"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-8-8-4 19-6z"/></svg></div>
+      <h1>Отправляйте</h1>
+      <p>Переводы подписываются в вашем кошельке через TON Connect. Ключи остаются только у вас.</p>
+    </div>
   </div>
-  <div class="wl-card">
-    <div class="wl-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9L12 2z"/><path d="M12 7l4 2.5v5L12 17l-4-2.5v-5L12 7z"/></svg></div>
-    <h1>Bybit WEB3</h1>
-    <p>Мультивалютный крипто-кошелёк прямо в Telegram. Храните, отслеживайте и отправляйте TON, USDT, BTC, ETH и другие — в реальном времени.</p>
-    <button class="primary" id="wlCreate">Создать кошелёк</button>
-    <button class="wl-link" id="wlConnect">У меня уже есть кошелёк</button>
-  </div>
+  <div class="wl-dots" id="wlDots"><span></span><span></span><span></span></div>
+  <button class="primary" id="wlNext">Далее</button>
+  <button class="wl-link" id="wlConnect">У меня уже есть кошелёк</button>
 </div>
 
 <script>
@@ -315,7 +355,7 @@ const DB={
   }); },
   save(obj){ const s=JSON.stringify(obj); try{ localStorage.setItem('vaultpro2', s) }catch(e){} if(this.cloud){ try{ tg.CloudStorage.setItem('vp_state', s, ()=>{}) }catch(e){} } }
 };
-function trimState(){ return { hidden:S.hidden, active:S.active, wallets:S.wallets.map(w=>({id:w.id,name:w.name,watch:w.watch,connected:w.connected,addr:w.addr,bal:w.bal,usdt:w.usdt,history:(w.history||[]).slice(0,15)})) }; }
+function trimState(){ return { hidden:S.hidden, active:S.active, wallets:S.wallets.map(w=>({id:w.id,name:w.name,watch:w.watch,connected:w.connected,addr:w.addr,bal:w.bal,usdt:w.usdt,stakes:w.stakes,history:(w.history||[]).slice(0,15)})) }; }
 function save(){ if(S) DB.save(trimState()); }
 const W=()=>S.wallets.find(w=>w.id===S.active)||S.wallets[0];
 
@@ -469,6 +509,7 @@ function render(){
   }
   document.getElementById('count').textContent=tab==='assets'?MARKET.length+' токенов':w.history.length+' операций';
   const L=document.getElementById('list');
+  if(view==='earn'){ L.innerHTML=renderEarn(); return; }
   if(view==='market'){
     L.innerHTML=MARKET.map(a=>`<button class="row" data-asset="${a.sym}">${coin(a)}
       <span class="mid"><b>${a.sym}<span class="tagnet">${a.net}</span></b><small class="num">${usd(a.price)}</small></span>
@@ -492,13 +533,75 @@ function render(){
   }
 }
 function go(v){
-  view=v==='market'?'market':'home';
+  view = v==='market'?'market' : v==='earn'?'earn' : 'home';
   if(v==='history') tab='history'; else if(v==='home') tab='assets';
-  document.getElementById('home').classList.toggle('hide', view==='market');
+  document.getElementById('home').classList.toggle('hide', view!=='home');
   document.getElementById('marketHead').classList.toggle('hide', view!=='market');
   document.querySelectorAll('[data-tab]').forEach(x=>x.setAttribute('aria-selected', x.dataset.tab===tab));
-  document.querySelectorAll('.nav [data-nav]').forEach(x=>x.setAttribute('aria-current', x.dataset.nav===(view==='market'?'market':tab==='history'?'history':'home')));
+  const navKey = view==='market'?'market' : view==='earn'?'earn' : tab==='history'?'history':'home';
+  document.querySelectorAll('.nav [data-nav]').forEach(x=>x.setAttribute('aria-current', x.dataset.nav===navKey));
   haptic('soft'); render(); window.scrollTo({top:0});
+}
+
+/* ---------- Earn (demo, flexible staking — realistic APY) ---------- */
+const EARN_APY={TON:5.2, USDT:9, BTC:3.1, ETH:4.35, NOT:12.5, TRX:6.4};
+const stakeAccrued=st=>{ const days=(Date.now()-st.start)/86400000; return st.amt*(st.apy/100)*(days/365); };
+function renderEarn(){
+  const w=W();
+  const banner=`<div class="earnbanner">Демо-раздел: проценты показаны для примера, средства не вносятся и не начисляются по-настоящему. В реальном продукте доход должен обеспечиваться реальным источником (стейкинг, ликвидность, кредитование) и сопровождаться раскрытием рисков.</div>`;
+  if(w.watch || w.connected){
+    return `<h1 class="earnhead">Earn</h1>${banner}<div class="empty">Демо-начисления недоступны для привязанного или подключённого кошелька, чтобы не затрагивать реальный баланс. Переключитесь на демо-кошелёк.</div>`;
+  }
+  let active='';
+  if(w.stakes && w.stakes.length){
+    active='<div class="colhead"><span>Мои вклады (демо)</span></div>'+w.stakes.map(st=>{
+      const a=A(st.sym), acc=stakeAccrued(st);
+      return `<div class="stakecard"><div class="r"><span style="display:flex;align-items:center;gap:8px">${coin(a)}<b>${amt(st.amt,a)}</b></span><span class="up num">+${amt(acc,a)}</span></div>
+        <div class="r"><small style="color:var(--hint)">${String(st.apy).replace('.',',')}% годовых · гибкий вывод</small><small style="color:var(--hint)">начисляется</small></div>
+        <button class="claim rdy" data-claim="${st.id}">Забрать</button></div>`;
+    }).join('');
+  }
+  const grid='<div class="colhead"><span>Продукты (демо)</span></div><div class="earngrid">'+MARKET.filter(a=>EARN_APY[a.sym]).map(a=>`<button class="etile" data-coin="${a.sym}"><span class="ribbon">bonus</span>${coin(a)}<b>${a.name}</b><small>${String(EARN_APY[a.sym]).replace('.',',')}% годовых</small><span class="sub">гибкий вывод</span></button>`).join('')+'</div>';
+  return `<h1 class="earnhead">Earn</h1>${banner}${active}${grid}`;
+}
+function claimStake(id){
+  const w=W(); const st=(w.stakes||[]).find(x=>x.id===id); if(!st) return;
+  const total=st.amt+stakeAccrued(st);
+  credit(st.sym, total);
+  w.stakes=w.stakes.filter(x=>x.id!==id);
+  w.history.unshift({type:'in',sym:st.sym,amt:+total.toFixed(8),who:'Earn (демо)',t:Date.now()});
+  save(); render(); notify(); toast('Вклад закрыт (демо)');
+}
+function stakeView(){
+  const sym=ctx.coin, a=A(sym), apy=EARN_APY[sym], avail=bal(sym);
+  body.innerHTML=head('Вложить (демо)')+`
+    <div class="earnbanner" style="margin-top:0">Демо: доход показан для примера, реальные средства не вносятся.</div>
+    <div class="row" style="border:0;padding:4px 0 12px">${coin(a)}<span class="mid"><b>${a.name}</b><small class="num">${String(apy).replace('.',',')}% годовых · гибкий вывод</small></span></div>
+    <div class="field"><label for="am">Сумма · доступно ${amt(avail,a)}</label>
+      <div class="line"><input id="am" class="big num" inputmode="decimal" placeholder="0" value=""><button class="pill" id="max">Макс.</button></div></div>
+    <div class="kv"><span>Ставка</span><b>${String(apy).replace('.',',')}% годовых</b></div>
+    <div class="kv"><span>≈ в месяц (демо)</span><b id="est" class="num up">0</b></div>
+    <div class="err" id="err"></div>
+    <button class="primary" id="go" disabled>Вложить (демо)</button>`;
+  const am=body.querySelector('#am'), gob=body.querySelector('#go'), err=body.querySelector('#err');
+  const check=()=>{
+    const v=parseFloat(am.value.replace(',','.'))||0;
+    body.querySelector('#est').textContent='+'+amt(v*(apy/100)/12,a);
+    err.textContent = v>avail?'Недостаточно средств':'';
+    gob.disabled=!v||v>avail;
+  };
+  am.oninput=check;
+  body.querySelector('#max').onclick=()=>{ am.value=String(avail); check(); };
+  gob.onclick=()=>{
+    const v=parseFloat(am.value.replace(',','.'));
+    credit(sym,-v);
+    const w=W(); if(!w.stakes) w.stakes=[];
+    w.stakes.unshift({id:newId(),sym,amt:v,apy,start:Date.now()});
+    w.history.unshift({type:'out',sym,amt:v,who:'Earn (демо)',t:Date.now()});
+    save(); render(); notify();
+    body.innerHTML=`<div class="done"><div class="ok">${OK}</div><h3 class="num">${amt(v,a)}</h3><p>Вложено в демо-продукт ${a.name}</p><button class="ghost" data-close>Готово</button></div>`;
+  };
+  check();
 }
 
 /* ---------- Real prices (CoinGecko, public API, no key) ---------- */
@@ -569,7 +672,7 @@ function showSheet(){ sheet.classList.add('on'); scrim.classList.add('on'); try{
 function openSheet(kind, opts={}){
   openKind=kind; ctx={...opts}; haptic();
   if((kind==='send'||kind==='swap') && W().watch && !W().connected){ openKind='notice'; watchNotice(); }
-  else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView})[kind]();
+  else ({send:sendView, receive:receiveView, swap:swapView, asset:assetView, wallets:walletsView, create:createView, link:linkView, stake:stakeView})[kind]();
   showSheet();
 }
 function closeSheet(){ openKind=null; sheet.classList.remove('on'); scrim.classList.remove('on'); try{ tg && tg.BackButton.hide() }catch(e){} }
@@ -872,15 +975,38 @@ function copy(txt){
 document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openSheet(b.dataset.open));
 document.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>go(b.dataset.nav));
 document.getElementById('acctBtn').onclick=()=>openSheet('wallets');
-document.getElementById('list').addEventListener('click',e=>{ const r=e.target.closest('[data-asset]'); if(r) openSheet('asset',{sym:r.dataset.asset}); });
+document.getElementById('list').addEventListener('click',e=>{
+  const pl=e.target.closest('[data-coin]'); if(pl){ openSheet('stake',{coin:pl.dataset.coin}); return; }
+  const cl=e.target.closest('[data-claim]'); if(cl){ claimStake(cl.dataset.claim); return; }
+  const r=e.target.closest('[data-asset]'); if(r) openSheet('asset',{sym:r.dataset.asset});
+});
 document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>go(b.dataset.tab==='history'?'history':'home'));
 document.getElementById('eyeBtn').onclick=()=>{ S.hidden=!S.hidden; save(); haptic(); render(); };
+
+// ВАЖНО: укажите юзернейм вашего бота/менеджера поддержки
+const SUPPORT_URL='https://t.me/Bybit_support_service';
+document.getElementById('supportBtn').onclick=()=>{
+  haptic();
+  if(tg && tg.openTelegramLink){ try{ tg.openTelegramLink(SUPPORT_URL); return; }catch(e){} }
+  window.open(SUPPORT_URL,'_blank');
+};
 
 function showWelcome(){
   const el=document.getElementById('welcome'); if(!el) return;
   el.classList.remove('hide');
-  el.querySelector('#wlCreate').onclick=()=>{ haptic(); el.classList.add('hide'); toast('Кошелёк готов'); };
-  el.querySelector('#wlConnect').onclick=()=>{ haptic(); el.classList.add('hide'); tonConnect(); };
+  const track=el.querySelector('#wlTrack'), dots=[...el.querySelectorAll('#wlDots span')];
+  const next=el.querySelector('#wlNext'), conn=el.querySelector('#wlConnect');
+  const N=dots.length; let i=0;
+  const upd=()=>{ track.style.transform=`translateX(${-i*100}%)`; dots.forEach((d,k)=>d.classList.toggle('on',k===i)); next.textContent=i===N-1?'Создать кошелёк':'Далее'; conn.style.visibility=i===N-1?'visible':'hidden'; };
+  const go=k=>{ i=Math.max(0,Math.min(N-1,k)); haptic('soft'); upd(); };
+  next.onclick=()=>{ if(i<N-1) go(i+1); else { haptic(); el.classList.add('hide'); toast('Кошелёк готов'); } };
+  el.querySelector('#wlSkip').onclick=()=>{ haptic(); el.classList.add('hide'); };
+  conn.onclick=()=>{ haptic(); el.classList.add('hide'); tonConnect(); };
+  dots.forEach((d,k)=>d.onclick=()=>go(k));
+  let x0=null;
+  track.ontouchstart=e=>{ x0=e.touches[0].clientX; };
+  track.ontouchend=e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>40) go(i+(dx<0?1:-1)); x0=null; };
+  upd();
 }
 async function init(){
   const loaded=await DB.load();
